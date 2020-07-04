@@ -1538,6 +1538,17 @@ def substitution(
 
 # pylint: disable=too-many-return-statements,too-many-branches
 def rflx_expr(expr: z3.ExprRef) -> Expr:
+    if expr.decl().name() == "if":
+        conditions = []
+        elseexpr = None
+        ifexpr = expr
+        while True:
+            conditions.append((rflx_expr(ifexpr.arg(0)), rflx_expr(ifexpr.arg(1))))
+            if ifexpr.arg(2).decl().name() != "if":
+                elseexpr = rflx_expr(ifexpr.arg(2))
+                break
+            ifexpr = ifexpr.arg(2)
+        return If(conditions, elseexpr)
     if isinstance(expr, z3.IntNumRef):
         return Number(expr.as_long())
     if isinstance(expr, z3.BoolRef):
@@ -1580,4 +1591,4 @@ def rflx_expr(expr: z3.ExprRef) -> Expr:
             return Pow(rflx_expr(expr.arg(0)), rflx_expr(expr.arg(1)))
         if z3.is_const(expr):
             return Variable(expr.decl().name())
-    raise NotImplementedError(type(expr))
+    raise NotImplementedError()

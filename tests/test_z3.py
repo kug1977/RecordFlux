@@ -29,10 +29,7 @@ from tests.utils import assert_equal
 
 
 def assert_z3_expr(expr: Expr) -> None:
-    result = rflx_expr(expr.z3expr())
-    print(repr(expr))
-    print(repr(result))
-    assert expr == result
+    assert expr == rflx_expr(expr.z3expr())
 
 
 def test_true() -> None:
@@ -252,3 +249,21 @@ def test_from_z3expr_greater() -> None:
 
 def test_from_z3expr_not_equal() -> None:
     assert_z3_expr(NotEqual(Number(100), Number(1)))
+
+
+def test_from_z3expr_if() -> None:
+    expr = If(
+        [
+            (Greater(Variable("a"), Number(5)), Number(1)),
+            (Greater(Variable("b"), Number(100)), Number(10)),
+        ],
+        Number(100),
+    )
+    expected = If(
+        [
+            (Less(Number(5), Variable("a")), Number(1)),
+            (Less(Number(100), Variable("b")), Number(10)),
+        ],
+        Number(100),
+    )
+    assert rflx_expr(expr.z3expr()) == expected
