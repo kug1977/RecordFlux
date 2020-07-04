@@ -67,10 +67,10 @@ def test_int() -> None:
 
 
 def test_add() -> None:
-    assert Add(Number(42), Number(1)).z3expr() == z3.IntVal(0) + z3.IntVal(42) + z3.IntVal(1)
+    assert Add(Number(42), Number(1)).z3expr() == z3.IntVal(42) + z3.IntVal(1)
     assert_equal(
         Add(Number(42), Number(1), Number(10)).z3expr(),
-        z3.IntVal(0) + z3.IntVal(42) + z3.IntVal(1) + z3.IntVal(10),
+        z3.Sum(z3.IntVal(42), z3.IntVal(1), z3.IntVal(10)),
     )
 
 

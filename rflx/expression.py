@@ -650,7 +650,7 @@ class Add(AssExpr):
         return " + "
 
     def z3expr(self) -> z3.ArithRef:
-        z3expr = sum(t.z3expr() for t in self.terms)
+        z3expr = z3.Sum(*[t.z3expr() for t in self.terms])
         if not isinstance(z3expr, z3.ArithRef):
             raise TypeError
         return z3expr
