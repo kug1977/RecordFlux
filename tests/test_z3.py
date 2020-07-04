@@ -8,6 +8,7 @@ from rflx.expression import (
     Case,
     Div,
     Equal,
+    Expr,
     Greater,
     GreaterEqual,
     If,
@@ -22,8 +23,16 @@ from rflx.expression import (
     Pow,
     Sub,
     Variable,
+    rflx_expr,
 )
 from tests.utils import assert_equal
+
+
+def assert_z3_expr(expr: Expr) -> None:
+    result = rflx_expr(expr.z3expr())
+    print(repr(expr))
+    print(repr(result))
+    assert expr == result
 
 
 def test_true() -> None:
@@ -82,7 +91,7 @@ def test_mul() -> None:
     )
 
 
-def test_substituted() -> None:
+def test_sub() -> None:
     assert Sub(Number(6), Number(4)).z3expr() == z3.IntVal(6) - z3.IntVal(4)
     assert Sub(Number(12), Number(20)).z3expr() == z3.IntVal(12) - z3.IntVal(20)
 
@@ -154,3 +163,92 @@ def test_case() -> None:
             z3.If(z3.Int("x") == z3.IntVal(10), z3.IntVal(2), z3.BoolVal(False)),
         ),
     )
+
+
+def test_from_z3expr_bool_literal() -> None:
+    assert_z3_expr(TRUE)
+    assert_z3_expr(FALSE)
+
+
+def test_from_z3expr_variable() -> None:
+    assert_z3_expr(Variable("X"))
+    assert_z3_expr(Variable("Foo_Bar"))
+
+
+def test_from_z3expr_neg() -> None:
+    assert_z3_expr(Not(TRUE))
+    assert_z3_expr(Not(FALSE))
+    assert_z3_expr(Not(Not(FALSE)))
+
+
+def test_from_z3expr_conj() -> None:
+    assert_z3_expr(And(TRUE, TRUE))
+    assert_z3_expr(And(TRUE, FALSE))
+    assert_z3_expr(And(And(TRUE, FALSE), FALSE))
+    assert_z3_expr(And(Not(And(TRUE, FALSE)), Not(FALSE)))
+    assert_z3_expr(And(TRUE, FALSE, FALSE, TRUE, Not(FALSE)))
+
+
+def test_from_z3expr_disj() -> None:
+    assert_z3_expr(Or(TRUE, TRUE))
+    assert_z3_expr(Or(TRUE, FALSE))
+    assert_z3_expr(Or(Or(TRUE, FALSE), FALSE))
+    assert_z3_expr(Or(Not(And(TRUE, FALSE)), Not(FALSE)))
+    assert_z3_expr(Or(TRUE, FALSE, FALSE, TRUE, Not(FALSE)))
+
+
+def test_from_z3expr_number() -> None:
+    assert_z3_expr(Number(0))
+    assert_z3_expr(Number(42))
+    assert_z3_expr(Number(-200))
+
+
+def test_from_z3expr_add() -> None:
+    assert_z3_expr(Add(Number(0), Number(20)))
+    assert_z3_expr(Add(Number(40), Number(20), Number(30)))
+
+
+def test_from_z3expr_mul() -> None:
+    assert_z3_expr(Mul(Number(6), Number(4)))
+    assert_z3_expr(Mul(Number(2), Number(4), Number(8)))
+
+
+def test_from_z3expr_sub() -> None:
+    assert_z3_expr(Sub(Number(6), Number(4)))
+    assert_z3_expr(Sub(Number(12), Number(20)))
+
+
+def test_from_z3expr_div() -> None:
+    assert_z3_expr(Div(Number(6), Number(3)))
+
+
+def test_from_z3expr_pow() -> None:
+    assert_z3_expr(Pow(Number(6), Number(3)))
+
+
+def test_from_z3expr_mod() -> None:
+    assert_z3_expr(Mod(Number(1000), Number(5)))
+
+
+def test_from_z3expr_less() -> None:
+    assert_z3_expr(Less(Number(1), Number(100)))
+
+
+def test_from_z3expr_less_equal() -> None:
+    assert_z3_expr(LessEqual(Number(1), Number(100)))
+
+
+def test_from_z3expr_equal() -> None:
+    assert_z3_expr(Equal(Number(100), Number(100)))
+
+
+def test_from_z3expr_greater_equal() -> None:
+    assert_z3_expr(GreaterEqual(Number(100), Number(1)))
+
+
+def test_from_z3expr_greater() -> None:
+    assert_z3_expr(Greater(Number(100), Number(1)))
+
+
+def test_from_z3expr_not_equal() -> None:
+    assert_z3_expr(NotEqual(Number(100), Number(1)))

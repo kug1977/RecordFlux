@@ -650,7 +650,8 @@ class Add(AssExpr):
         return " + "
 
     def z3expr(self) -> z3.ArithRef:
-        z3expr = z3.Sum(*[t.z3expr() for t in self.terms])
+        exprs = [t.z3expr() for t in self.terms]
+        z3expr = z3.Sum(*[e for e in exprs if isinstance(e, z3.ArithRef)])
         if not isinstance(z3expr, z3.ArithRef):
             raise TypeError
         return z3expr
@@ -675,7 +676,8 @@ class Mul(AssExpr):
         return " * "
 
     def z3expr(self) -> z3.ArithRef:
-        z3expr = z3.Product(*[t.z3expr() for t in self.terms])
+        exprs = [t.z3expr() for t in self.terms]
+        z3expr = z3.Product(*[e for e in exprs if isinstance(e, z3.ArithRef)])
         if not isinstance(z3expr, z3.ArithRef):
             raise TypeError
         return z3expr
@@ -1532,3 +1534,50 @@ def substitution(
         if isinstance(expression, Name) and expression in mapping
         else expression
     )
+
+
+# pylint: disable=too-many-return-statements,too-many-branches
+def rflx_expr(expr: z3.ExprRef) -> Expr:
+    if isinstance(expr, z3.IntNumRef):
+        return Number(expr.as_long())
+    if isinstance(expr, z3.BoolRef):
+        if z3.is_not(expr):
+            return Not(rflx_expr(expr.arg(0)))
+        if z3.is_and(expr):
+            return And(*[rflx_expr(expr.arg(i)) for i in range(expr.num_args())])
+        if z3.is_or(expr):
+            return Or(*[rflx_expr(expr.arg(i)) for i in range(expr.num_args())])
+        if z3.is_lt(expr):
+            return Less(rflx_expr(expr.arg(0)), rflx_expr(expr.arg(1)))
+        if z3.is_le(expr):
+            return LessEqual(rflx_expr(expr.arg(0)), rflx_expr(expr.arg(1)))
+        if z3.is_eq(expr):
+            return Equal(rflx_expr(expr.arg(0)), rflx_expr(expr.arg(1)))
+        if z3.is_ge(expr):
+            return GreaterEqual(rflx_expr(expr.arg(0)), rflx_expr(expr.arg(1)))
+        if z3.is_gt(expr):
+            return Greater(rflx_expr(expr.arg(0)), rflx_expr(expr.arg(1)))
+        if z3.is_true(expr):
+            return TRUE
+        if z3.is_false(expr):
+            return FALSE
+        if z3.is_distinct(expr):
+            assert expr.num_args() == 2
+            return NotEqual(rflx_expr(expr.arg(0)), rflx_expr(expr.arg(1)))
+        raise NotImplementedError(expr.decl().name())
+    if isinstance(expr, z3.ArithRef):
+        if z3.is_add(expr):
+            return Add(*[rflx_expr(expr.arg(i)) for i in range(expr.num_args())])
+        if z3.is_sub(expr):
+            return Sub(rflx_expr(expr.arg(0)), rflx_expr(expr.arg(1)))
+        if z3.is_mul(expr):
+            return Mul(*[rflx_expr(expr.arg(i)) for i in range(expr.num_args())])
+        if z3.is_idiv(expr):
+            return Div(rflx_expr(expr.arg(0)), rflx_expr(expr.arg(1)))
+        if z3.is_mod(expr):
+            return Mod(rflx_expr(expr.arg(0)), rflx_expr(expr.arg(1)))
+        if expr.decl().name() == "^":
+            return Pow(rflx_expr(expr.arg(0)), rflx_expr(expr.arg(1)))
+        if z3.is_const(expr):
+            return Variable(expr.decl().name())
+    raise NotImplementedError(type(expr))
