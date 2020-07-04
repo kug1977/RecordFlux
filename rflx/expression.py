@@ -675,12 +675,7 @@ class Mul(AssExpr):
         return " * "
 
     def z3expr(self) -> z3.ArithRef:
-        z3expr = self.terms[0].z3expr()
-        for t in self.terms[1:]:
-            tmp = t.z3expr()
-            if not isinstance(z3expr, z3.ArithRef) or not isinstance(tmp, z3.ArithRef):
-                raise TypeError
-            z3expr = z3expr * tmp
+        z3expr = z3.Product(*[t.z3expr() for t in self.terms])
         if not isinstance(z3expr, z3.ArithRef):
             raise TypeError
         return z3expr

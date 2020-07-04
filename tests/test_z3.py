@@ -77,7 +77,8 @@ def test_add() -> None:
 def test_mul() -> None:
     assert Mul(Number(6), Number(4)).z3expr() == z3.IntVal(6) * z3.IntVal(4)
     assert_equal(
-        Mul(Number(2), Number(4), Number(8)).z3expr(), z3.IntVal(2) * z3.IntVal(4) * z3.IntVal(8)
+        Mul(Number(2), Number(4), Number(8)).z3expr(),
+        z3.Product(z3.IntVal(2), z3.IntVal(4), z3.IntVal(8)),
     )
 
 
