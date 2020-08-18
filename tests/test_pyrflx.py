@@ -594,7 +594,7 @@ def test_value_mod() -> None:
     modvalue.assign(128)
     assert modvalue.initialized
     assert modvalue.value == 128
-    assert str(modvalue.bitstring) == "0000000010000000"
+    assert int(modvalue.bitstring) == 128
     with pytest.raises(ValueError, match=r"value 65536 not in type range 0 .. 65535"):
         modvalue.assign(2 ** 16)
     with pytest.raises(ValueError, match=r"value -1 not in type range 0 .. 65535"):
@@ -613,7 +613,7 @@ def test_value_range() -> None:
     rangevalue.assign(10)
     assert rangevalue.initialized
     assert rangevalue.value == 10
-    assert str(rangevalue.bitstring) == "00001010"
+    assert int(rangevalue.bitstring) == 10
     with pytest.raises(ValueError, match=r"value 17 not in type range 8 .. 16"):
         rangevalue.assign(17)
     with pytest.raises(ValueError, match=r"value 7 not in type range 8 .. 16"):
@@ -646,7 +646,7 @@ def test_value_enum_assign(enum_value: EnumValue) -> None:
     enum_value.assign("One")
     assert enum_value.initialized
     assert enum_value.value == "One"
-    assert str(enum_value.bitstring) == "00000001"
+    assert int(enum_value.bitstring) == 1
 
     with pytest.raises(KeyError, match=r"Three is not a valid enum value"):
         enum_value.assign("Three")
@@ -657,7 +657,7 @@ def test_value_enum_parse(enum_value: EnumValue) -> None:
     assert enum_value.value == "One"
 
     with pytest.raises(KeyError, match=r"Number 15 is not a valid enum value"):
-        enum_value.parse(Bitstring("1111"))
+        enum_value.parse(Bitstring(15, 4))
 
 
 @pytest.fixture(name="enum_value_imported")
@@ -728,8 +728,8 @@ def test_value_opaque() -> None:
     k = opaquevalue.size
     assert isinstance(k, Number)
     assert k.value == 16
-    assert str(opaquevalue.bitstring) == "0000000100000010"
-    opaquevalue.parse(Bitstring("1111"))
+    assert int(opaquevalue.bitstring) == 258
+    opaquevalue.parse(Bitstring(15, 8))
     assert opaquevalue._value == b"\x0f"
 
 
@@ -850,23 +850,6 @@ def test_value_parse_from_bitstring(tlv: MessageValue, enum_value: EnumValue) ->
     msg_array.parse(tlv.bytestring)
 
 
-def test_bitstring(tlv: MessageValue) -> None:
-    with pytest.raises(ValueError, match="Bitstring does not consist of only 0 and 1"):
-        Bitstring("123")
-    assert Bitstring("01") + Bitstring("00") == Bitstring("0100")
-
-    test_bytes = b"\x40"
-    with pytest.raises(
-        IndexError,
-        match=(
-            "Bitstring representing the message is too short"
-            " - stopped while parsing field: Length"
-        ),
-    ):
-        tlv.parse(test_bytes)
-    assert not tlv.valid_message
-
-
 def test_odd_length_binary(message_odd_length: MessageValue) -> None:
     test_bytes = b"\x01\x02\x01\xff\xb8"
     message_odd_length.parse(test_bytes)
@@ -958,7 +941,7 @@ def test_array_assign_incorrect_values(
         match="cannot parse nested messages in array of type TLV.Message: Error while setting "
         "value for field Tag: 'Number 0 is not a valid enum value'",
     ):
-        msg_array.parse(Bitstring("0001111"))
+        msg_array.parse(Bitstring(15, 7))
 
     tlv.set("Tag", "Msg_Data")
     tlv._fields["Length"].typeval.assign(111111111111111, False)

@@ -182,7 +182,7 @@ class IntegerValue(ScalarValue):
 
     def parse(self, value: Union[Bitstring, bytes], check: bool = True) -> None:
         if isinstance(value, bytes):
-            value = Bitstring.from_bytes(value)
+            value = Bitstring(value)
         self.assign(int(value), check)
 
     @property
@@ -198,7 +198,7 @@ class IntegerValue(ScalarValue):
     @property
     def bitstring(self) -> Bitstring:
         self._raise_initialized()
-        return Bitstring(format(self._value, f"0{self.size}b"))
+        return Bitstring(self._value, self.size.value)
 
     @property
     def accepted_type(self) -> type:
@@ -255,7 +255,7 @@ class EnumValue(ScalarValue):
 
     def parse(self, value: Union[Bitstring, bytes], check: bool = True) -> None:
         if isinstance(value, bytes):
-            value = Bitstring.from_bytes(value)
+            value = Bitstring(value)
         value_as_number = Number(int(value))
         if value_as_number not in self.literals.values():
             if self._type.always_valid:
@@ -288,7 +288,7 @@ class EnumValue(ScalarValue):
     @property
     def bitstring(self) -> Bitstring:
         self._raise_initialized()
-        return Bitstring(format(self._value[1].value, f"0{self.size}b"))
+        return Bitstring(self._value[1].value, self.size.value)
 
     @property
     def accepted_type(self) -> type:
@@ -315,8 +315,7 @@ class CompositeValue(TypeValue):
         elif isinstance(value, Bitstring):
             length_of_value = len(value)
         else:
-            bits = [element.bitstring for element in value]
-            length_of_value = len(Bitstring.join(bits))
+            length_of_value = sum([len(element.bitstring) for element in value])
 
         if (
             self._expected_size is not None
@@ -392,7 +391,8 @@ class OpaqueValue(CompositeValue):
     def bitstring(self) -> Bitstring:
         self._raise_initialized()
         assert self._value
-        return Bitstring(format(int.from_bytes(self._value, "big"), f"0{self.size}b"))
+        assert isinstance(self.size, Number)
+        return Bitstring(self._value, self.size.value)
 
     @property
     def accepted_type(self) -> type:
@@ -442,7 +442,7 @@ class ArrayValue(CompositeValue):
         if check:
             self._check_length_of_assigned_value(value)
         if isinstance(value, bytes):
-            value = Bitstring.from_bytes(value)
+            value = Bitstring(value)
         if self._is_message_array:
 
             while len(value) != 0:
@@ -460,18 +460,17 @@ class ArrayValue(CompositeValue):
                 value = value[len(nested_message.bitstring) :]
 
         elif isinstance(self._element_type, Scalar):
-            value_str = str(value)
             type_size = self._element_type.size
             type_size_int = type_size.value
             new_value = []
 
-            while len(value_str) != 0:
+            while len(value) != 0:
                 nested_value = TypeValue.construct(
                     self._element_type, imported=self._element_type.package != self._type.package
                 )
-                nested_value.parse(Bitstring(value_str[:type_size_int]), check)
+                nested_value.parse(value[:type_size_int], check)
                 new_value.append(nested_value)
-                value_str = value_str[type_size_int:]
+                value = value[type_size_int:]
 
             self._value = new_value
         else:
@@ -661,7 +660,7 @@ class MessageValue(TypeValue):
 
     def parse(self, value: Union[Bitstring, bytes], check: bool = True) -> None:
         if isinstance(value, bytes):
-            value = Bitstring.from_bytes(value)
+            value = Bitstring(value)
         current_field_name = self._next_field(INITIAL.name)
         last_field_first_in_bitstr = current_field_first_in_bitstr = 0
 
@@ -976,7 +975,7 @@ class MessageValue(TypeValue):
 
     @property
     def bitstring(self) -> Bitstring:
-        bits = ""
+        bits = Bitstring()
         field = self._next_field(INITIAL.name)
         while field and field != FINAL.name:
             field_val = self._fields[field]
@@ -986,10 +985,10 @@ class MessageValue(TypeValue):
                 or not field_val.first.value <= len(bits)
             ):
                 break
-            bits = f"{bits[: field_val.first.value]}{str(self._fields[field].typeval.bitstring)}"
+            bits = bits[: field_val.first.value]
+            bits.append(self._fields[field].typeval.bitstring)
             field = self._next_field(field)
-
-        return Bitstring(bits)
+        return bits
 
     @property
     def value(self) -> Any:
@@ -997,13 +996,7 @@ class MessageValue(TypeValue):
 
     @property
     def bytestring(self) -> bytes:
-        bits = str(self.bitstring)
-        if len(bits) < 8:
-            bits = bits.ljust(8, "0")
-
-        return b"".join(
-            [int(bits[i : i + 8], 2).to_bytes(1, "big") for i in range(0, len(bits), 8)]
-        )
+        return bytes(self.bitstring)
 
     @property
     def fields(self) -> List[str]:
