@@ -40,15 +40,14 @@ class Proof:
         self.__facts = facts or []
         self.__result = ProofResult.unsat
 
+    @lru_cache(maxsize=None)
+    def result(self) -> ProofResult:
         solver = z3.Solver()
         solver.add(self.__expr.z3expr())
         for f in self.__facts:
             solver.add(f.z3expr())
 
         self.__result = ProofResult(solver.check())
-
-    @property
-    def result(self) -> ProofResult:
         return self.__result
 
     @property

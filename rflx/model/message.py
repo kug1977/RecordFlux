@@ -332,7 +332,7 @@ class AbstractMessage(mty.Type):
             ]
             empty_field = expr.Equal(expr.Length(field.name), expr.Number(0))
             proof = empty_field.check([*self.type_constraints(empty_field), *conditions, *lengths])
-            if proof.result == expr.ProofResult.sat:
+            if proof.result() == expr.ProofResult.sat:
                 return True
 
         return False
@@ -711,7 +711,7 @@ class AbstractMessage(mty.Type):
                     if i1 < i2:
                         conflict = expr.And(c1.condition, c2.condition)
                         proof = conflict.check(self.type_constraints(conflict))
-                        if proof.result == expr.ProofResult.sat:
+                        if proof.result() == expr.ProofResult.sat:
                             c1_message = str(c1.condition).replace("\n", " ")
                             c2_message = str(c2.condition).replace("\n", " ")
                             self.error.append(
@@ -763,7 +763,7 @@ class AbstractMessage(mty.Type):
                         expr.Or(*[o.condition for o in outgoing], location=f.identifier.location)
                     )
                 proof = expr.TRUE.check(facts)
-                if proof.result == expr.ProofResult.sat:
+                if proof.result() == expr.ProofResult.sat:
                     break
 
                 paths.append((path, proof.error))
@@ -799,7 +799,7 @@ class AbstractMessage(mty.Type):
                     contradiction = c.condition
                     constraints = self.type_constraints(contradiction)
                     proof = contradiction.check([*constraints, *facts])
-                    if proof.result == expr.ProofResult.sat:
+                    if proof.result() == expr.ProofResult.sat:
                         continue
 
                     contradictions.append((path, c.condition, proof.error))
@@ -896,11 +896,11 @@ class AbstractMessage(mty.Type):
                 proof = expr.TRUE.check(facts)
 
                 # Only check positions of reachable paths
-                if proof.result != expr.ProofResult.sat:
+                if proof.result() != expr.ProofResult.sat:
                     continue
 
                 proof = negative.check(facts)
-                if proof.result != expr.ProofResult.unsat:
+                if proof.result() != expr.ProofResult.unsat:
                     path_message = " -> ".join([l.target.name for l in path])
                     self.error.append(
                         f'negative length for field "{f.name}" ({path_message})',
@@ -911,7 +911,7 @@ class AbstractMessage(mty.Type):
                     return
 
                 proof = start.check(facts)
-                if proof.result != expr.ProofResult.sat:
+                if proof.result() != expr.ProofResult.sat:
                     path_message = " -> ".join([last.target.name for last in path])
                     self.error.append(
                         f'negative start for field "{f.name}" ({path_message})',
@@ -940,7 +940,7 @@ class AbstractMessage(mty.Type):
                         )
                     )
                     proof = start_aligned.check([*facts, *self.type_constraints(start_aligned)])
-                    if proof.result != expr.ProofResult.unsat:
+                    if proof.result() != expr.ProofResult.unsat:
                         path_message = " -> ".join([p.target.name for p in path])
                         self.error.append(
                             f'opaque field "{f.name}" not aligned to {element_size} bit boundary'
@@ -961,7 +961,7 @@ class AbstractMessage(mty.Type):
                     proof = length_multiple_element_size.check(
                         [*facts, *self.type_constraints(length_multiple_element_size)]
                     )
-                    if proof.result != expr.ProofResult.unsat:
+                    if proof.result() != expr.ProofResult.unsat:
                         path_message = " -> ".join([p.target.name for p in path])
                         self.error.append(
                             f'length of opaque field "{f.name}" not multiple of {element_size} bit'
@@ -1017,7 +1017,7 @@ class AbstractMessage(mty.Type):
 
             # Coverage expression must be False, i.e. no bits left
             proof = expr.TRUE.check(facts)
-            if proof.result == expr.ProofResult.sat:
+            if proof.result() == expr.ProofResult.sat:
                 self.error.append(
                     "path does not cover whole message",
                     Subsystem.MODEL,
@@ -1046,7 +1046,7 @@ class AbstractMessage(mty.Type):
                         self.__target_last(l), expr.Last(l.first.prefix), l.location
                     )
                     proof = overlaid.check(facts)
-                    if proof.result != expr.ProofResult.sat:
+                    if proof.result() != expr.ProofResult.sat:
                         self.error.append(
                             f'field "{f.name}" not congruent with'
                             f' overlaid field "{l.first.prefix}"',
@@ -1317,7 +1317,7 @@ class UnprovenMessage(AbstractMessage):
                                 inner_message.field_condition(final_link.source),
                             ]
                         )
-                        if proof.result != expr.ProofResult.unsat:
+                        if proof.result() != expr.ProofResult.unsat:
                             structure.append(
                                 Link(
                                     final_link.source,
