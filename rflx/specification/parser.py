@@ -65,7 +65,7 @@ class Parser:
         error = RecordFluxError()
 
         for f in specfiles:
-            error.extend(self.__determine_dependencies(f))
+            self.__determine_dependencies(f, error)
 
         with Pool() as p:
             for f, s, e in p.map(
@@ -80,8 +80,8 @@ class Parser:
         error.propagate()
 
     def __determine_dependencies(
-        self, specfile: Path, transitions: List[Tuple[str, ID]] = None
-    ) -> RecordFluxError:
+        self, specfile: Path, error: RecordFluxError, transitions: List[Tuple[str, ID]] = None
+    ) -> None:
         if specfile in self.__specifications:
             self.__specifications.move_to_end(specfile)
         else:
@@ -89,8 +89,6 @@ class Parser:
 
         if not transitions:
             transitions = []
-
-        error = RecordFluxError()
 
         with open(specfile, "r") as filehandle:
             push_source(specfile)
@@ -118,10 +116,8 @@ class Parser:
                             )
                             continue
                         transitions.append(transition)
-                        error.extend(
-                            self.__determine_dependencies(
-                                specfile.parent / f"{str(item).lower()}.rflx", transitions
-                            )
+                        self.__determine_dependencies(
+                            specfile.parent / f"{str(item).lower()}.rflx", error, transitions
                         )
             except (ParseException, ParseFatalException) as e:
                 error.append(
@@ -133,8 +129,6 @@ class Parser:
                 error.propagate()
             finally:
                 pop_source()
-
-        return error
 
     @staticmethod
     def _parse(specfile: Path) -> Tuple[Path, Optional[Specification], RecordFluxError]:
@@ -188,29 +182,27 @@ class Parser:
                 and specification.package.identifier not in self.__evaluated_specifications
             ):
                 self.__evaluated_specifications.add(specification.package.identifier)
-                try:
-                    self.__evaluate_specification(specification)
-                except RecordFluxError as e:
-                    error.extend(e)
+                self.__evaluate_specification(specification, error)
         try:
             result = Model(self.__types, self.__sessions)
         except RecordFluxError as e:
             error.extend(e)
 
         error.propagate()
+
         return result
 
     @property
     def specifications(self) -> Dict[str, Specification]:
         return {str(s.package.identifier): s for s in self.__specifications.values() if s}
 
-    def __evaluate_specification(self, specification: Specification) -> None:
+    def __evaluate_specification(
+        self, specification: Specification, error: RecordFluxError
+    ) -> None:
         log.info("Processing %s", specification.package.identifier)
 
-        error = RecordFluxError()
         self.__evaluate_types(specification, error)
-        self.__evaluate_sessions(specification)
-        error.propagate()
+        self.__evaluate_sessions(specification, error)
 
     def __evaluate_types(self, spec: Specification, error: RecordFluxError) -> None:
         for t in spec.package.types:
@@ -245,20 +237,23 @@ class Parser:
             except RecordFluxError as e:
                 error.extend(e)
 
-    def __evaluate_sessions(self, spec: Specification) -> None:
+    def __evaluate_sessions(self, spec: Specification, error: RecordFluxError) -> None:
         for s in spec.package.sessions:
-            self.__sessions.append(
-                Session(
-                    ID(spec.package.identifier, s.identifier.location) * s.identifier.name,
-                    s.initial,
-                    s.final,
-                    s.states,
-                    s.declarations,
-                    s.parameters,
-                    self.__types,
-                    s.location,
+            try:
+                self.__sessions.append(
+                    Session(
+                        ID(spec.package.identifier, s.identifier.location) * s.identifier.name,
+                        s.initial,
+                        s.final,
+                        s.states,
+                        s.declarations,
+                        s.parameters,
+                        self.__types,
+                        s.location,
+                    )
                 )
-            )
+            except RecordFluxError as e:
+                error.extend(e)
 
 
 def create_array(array: ArraySpec, types: Sequence[Type]) -> Array:
