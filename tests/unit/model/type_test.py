@@ -54,6 +54,16 @@ def test_modular_last() -> None:
     assert mod.last == Number(2 ** 32 - 1)
 
 
+def test_modular_serialize() -> None:
+    assert models.MODULAR_INTEGER.serialize == {
+        "data": {
+            "identifier": ["P", "Modular"],
+            "exponent": {"data": {"base": 0, "value": 8}, "kind": "Number"},
+        },
+        "kind": "ModularInteger",
+    }
+
+
 def test_modular_invalid_modulus_power_of_two() -> None:
     assert_type_error(
         ModularInteger("P::T", Number(255), Location((65, 3))),

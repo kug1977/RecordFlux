@@ -156,7 +156,7 @@ class ModularInteger(Integer):
             "kind": self.__class__.__name__,
             "data": {
                 "identifier": self.identifier.serialize,
-                "modulus": self.modulus.serialize,
+                "exponent": self.size.serialize,
             },
         }
 
