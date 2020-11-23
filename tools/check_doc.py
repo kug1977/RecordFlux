@@ -7,8 +7,11 @@ import subprocess
 import sys
 
 import pyparsing
+from librecordfluxdsllang import AnalysisContext
 
 import rflx.specification
+from rflx.error import RecordFluxError
+from rflx.specification.parser import GrammarRule, diagnostics_to_error
 from tests.const import GENERATED_DIR, SPEC_DIR
 
 
@@ -85,6 +88,13 @@ def check_code(block: str, block_type: CodeBlockType) -> bool:
     return True
 
 
+def parse(data: str, rule: GrammarRule) -> None:
+    unit = AnalysisContext().get_from_buffer("<stdin>", data, rule=rule)
+    error = RecordFluxError()
+    if diagnostics_to_error(unit.diagnostics, error):
+        error.propagate()
+
+
 def check_rflx_code(block: str, block_type: CodeBlockType) -> bool:
     valid = True
 
@@ -92,15 +102,15 @@ def check_rflx_code(block: str, block_type: CodeBlockType) -> bool:
         if block_type == CodeBlockType.RFLX:
             rflx.specification.Parser().parse_string(block)
         elif block_type == CodeBlockType.RFLX_PARTIAL:
-            rflx.specification.grammar.specification().parseString(block)
+            parse(data=block, rule=GrammarRule.specification_rule)
         elif block_type == CodeBlockType.RFLX_CONTEXT:
-            rflx.specification.grammar.context_clause().parseString(block)
+            parse(data=block, rule=GrammarRule.context_clause_rule)
         elif block_type == CodeBlockType.RFLX_DECLARATION:
-            rflx.specification.grammar.basic_declarations().parseString(block)
-    except (pyparsing.ParseException, pyparsing.ParseFatalException) as e:
+            parse(data=block, rule=GrammarRule.basic_declarations_rule)
+    except (RecordFluxError, pyparsing.ParseException, pyparsing.ParseFatalException) as e:
         valid = False
         print(pyparsing.ParseException.explain(e, 0))
-        print(f"\naffected code block:\n\n{block}")
+        print(f"\naffected code block ({block_type}):\n\n{block}")
 
     return valid
 
