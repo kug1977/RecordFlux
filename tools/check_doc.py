@@ -7,7 +7,7 @@ import subprocess
 import sys
 
 import pyparsing
-from librecordfluxdsllang import AnalysisContext
+from librecordfluxdsllang import AnalysisContext  # type: ignore
 
 import rflx.specification
 from rflx.error import RecordFluxError
