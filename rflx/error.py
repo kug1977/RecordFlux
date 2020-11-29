@@ -2,8 +2,6 @@ from enum import Enum, auto
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
-from pyparsing import col, lineno
-
 from rflx.common import Base, verbose_repr
 
 
@@ -161,11 +159,3 @@ def fail(
     e = RecordFluxError()
     e.append(message, subsystem, severity, location)
     e.propagate()
-
-
-def parser_location(start: int, end: int, string: str, source: Path = None) -> Location:
-    return Location(
-        start=(lineno(start, string), col(start, string)),
-        end=(lineno(end - 1, string), col(end - 1, string)),
-        source=source,
-    )

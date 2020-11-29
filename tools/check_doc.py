@@ -6,7 +6,6 @@ import pathlib
 import subprocess
 import sys
 
-import pyparsing
 from librecordfluxdsllang import AnalysisContext  # type: ignore
 
 import rflx.specification
@@ -107,9 +106,9 @@ def check_rflx_code(block: str, block_type: CodeBlockType) -> bool:
             parse(data=block, rule=GrammarRule.context_clause_rule)
         elif block_type == CodeBlockType.RFLX_DECLARATION:
             parse(data=block, rule=GrammarRule.basic_declarations_rule)
-    except (RecordFluxError, pyparsing.ParseException, pyparsing.ParseFatalException) as e:
+    except RecordFluxError as e:
         valid = False
-        print(pyparsing.ParseException.explain(e, 0))
+        print(e)
         print(f"\naffected code block ({block_type}):\n\n{block}")
 
     return valid
