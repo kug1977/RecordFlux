@@ -41,7 +41,7 @@ jobs:
         echo "$HOME/bin" >> $GITHUB_PATH
         echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
         python -m pip install --upgrade pip wheel
-        PATH="$HOME/bin:$PATH" pip install --user -e .[devel]
+        PATH="$HOME/bin:$PATH" pip install --user -e .[devel] -vv
     - name: Check
       run: |
         make check_${{ matrix.target }}
@@ -117,7 +117,7 @@ jobs:
         echo "PYTEST_ADDOPTS=--basetemp=build" >> $GITHUB_ENV
         sudo apt install graphviz libgmp-dev patchelf
         python -m pip install --upgrade pip wheel
-        PATH="$HOME/bin:$PATH" pip install --user -e .[devel]
+        PATH="$HOME/bin:$PATH" pip install --user -e .[devel] -vv
     - name: Configure kernel parameters
       run: |
         sudo /sbin/sysctl -w net.ipv4.ping_group_range="0 2147483647"
@@ -167,7 +167,7 @@ jobs:
         echo "PYTEST_ADDOPTS=--basetemp=build" >> $GITHUB_ENV
         sudo apt install graphviz libgmp-dev patchelf
         python -m pip install --upgrade pip wheel
-        PATH="$HOME/bin:$PATH" pip install --user -e .[devel]
+        PATH="$HOME/bin:$PATH" pip install --user -e .[devel] -vv
     - name: Test
       run: |
         make test_${{ matrix.target }}
@@ -268,7 +268,7 @@ jobs:
         echo "$HOME/bin" >> $GITHUB_PATH
         echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
         python -m pip install --upgrade pip wheel
-        PATH="$HOME/bin:$PATH" pip install --user -e .[devel]
+        PATH="$HOME/bin:$PATH" pip install --user -e .[devel] -vv
     - name: Verify
       run: |
         make prove_${{ matrix.target }}
@@ -319,7 +319,7 @@ jobs:
         echo "$HOME/bin" >> $GITHUB_PATH
         echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
         python -m pip install --upgrade pip wheel
-        PATH="$HOME/bin:$PATH" pip install --user -e .[devel]
+        PATH="$HOME/bin:$PATH" pip install --user -e .[devel] -vv
     - name: Verify
       run: |
         make prove_${{ matrix.target }}
