@@ -1,0 +1,158 @@
+with DHCP;
+
+package DHCP_Client is
+
+   type DHCP_Message_Types is array of DHCP::DHCP_Message_Type;
+
+   generic
+      Channel : Channel with Readable, Writable;
+   session Session with
+      Initial => Send_Discover,
+      Final => Terminated
+   is
+      Discover : DHCP::Message;
+      Offer : DHCP::Message;
+      Request : DHCP::Message;
+      Ack : DHCP::Message;
+   begin
+      state Send_Discover is
+         Options : DHCP::Options;
+         Parameter_Request_List : DHCP::Option_Codes;
+      begin
+         Options'Append (
+            DHCP::Option'(
+               Code => DHCP::DHCP_MESSAGE_TYPE_OPTION,
+               Len => DHCP::DHCP_Message_Type'Size / 8,
+               DHCP_Message_Type => DHCP::DHCPDISCOVER
+            )
+         );
+         Parameter_Request_List'Append (DHCP::SUBNET_MASK_OPTION);
+         Parameter_Request_List'Append (DHCP::ROUTER_OPTION);
+         Parameter_Request_List'Append (DHCP::DOMAIN_NAME_OPTION);
+         Parameter_Request_List'Append (DHCP::DOMAIN_NAME_SERVER_OPTION);
+         Options'Append (
+            DHCP::Option'(
+               Code => DHCP::PARAMETER_REQUEST_LIST_OPTION,
+               Len => Parameter_Request_List'Size / 8,
+               Parameter_Request_List => Parameter_Request_List
+            )
+         );
+         --  Options'Append (
+         --     DHCP::Option'(
+         --        Code => DHCP::PARAMETER_REQUEST_LIST_OPTION,
+         --        Len => 4 * DHCP::Option_Code'Size,
+         --        Parameter_Request_List => [
+         --           DHCP::SUBNET_MASK_OPTION,
+         --           DHCP::ROUTER_OPTION,
+         --           DHCP::DOMAIN_NAME_OPTION,
+         --           DHCP::DOMAIN_NAME_SERVER_OPTION
+         --        ]
+         --     )
+         --  );
+         Options'Append (
+            DHCP::Option'(
+               Code => DHCP::END_OPTION
+            )
+         );
+         Discover := DHCP::Message'(
+            Op => DHCP::BOOTREQUEST,
+            Htype => DHCP::HT_ETHERNET_10,
+            Hlen => DHCP::HL_ETHERNET_10,
+            Hops => 0,
+            Xid => 0,
+            Secs => 0,
+            Broadcast_Flag => True,
+            Reserved_Flags => 0,
+            Ciaddr => 0,
+            Yiaddr => 0,
+            Siaddr => 0,
+            Giaddr => 0,
+            Chaddr => [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            Sname => [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            File => [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            Magic_Cookie => 16#63825363#,
+            Options => Options
+         );
+         Channel'Write (Discover);
+      transition
+         then Receive_Offer
+      end Send_Discover;
+
+      state Receive_Offer is
+         Offer_Message_Types : DHCP_Message_Types;
+      begin
+         Channel'Read (Offer);
+         Offer_Message_Types := [for O in Offer.Options => O.DHCP_Message_Type when O.Code = DHCP::DHCP_MESSAGE_TYPE_OPTION];
+      transition
+         then Send_Request
+            if Offer'Valid = True and Offer.Op = DHCP::BOOTREPLY and Offer_Message_Types'Size > 0 and Offer_Message_Types'Head = DHCP::DHCPOFFER
+         then Receive_Offer
+      end Receive_Offer;
+
+      state Send_Request is
+         Options : DHCP::Options;
+      begin
+         Options'Append (
+            DHCP::Option'(Code => DHCP::DHCP_MESSAGE_TYPE_OPTION, Len => DHCP::DHCP_Message_Type'Size / 8, DHCP_Message_Type => DHCP::DHCPREQUEST)
+         );
+         Options'Append (
+            DHCP::Option'(Code => DHCP::REQUESTED_IP_ADDRESS_OPTION, Len => DHCP::IP_Address'Size / 8, Requested_IP_Address => Offer.Yiaddr)
+         );
+         Options'Append (
+            DHCP::Option'(Code => DHCP::SERVER_IDENTIFIER_OPTION, Len => DHCP::IP_Address'Size / 8, Server_Identifier => Offer.Siaddr)
+         );
+         Request := DHCP::Message'(
+            Op => DHCP::BOOTREQUEST,
+            Htype => DHCP::HT_ETHERNET_10,
+            Hlen => DHCP::HL_ETHERNET_10,
+            Hops => 0,
+            Xid => 0,
+            Secs => 0,
+            Broadcast_Flag => True,
+            Reserved_Flags => 0,
+            Ciaddr => Offer.Yiaddr,
+            Yiaddr => 0,
+            Siaddr => Offer.Siaddr,
+            Giaddr => 0,
+            Chaddr => [],
+            Sname => [],
+            File => [],
+            Magic_Cookie => 16#63825363#,
+            Options => Options
+         );
+         Channel'Write (Request);
+      transition
+         then Receive_Ack
+      end Send_Request;
+
+      state Receive_Ack is
+         Ack_Message_Types : DHCP_Message_Types;
+      begin
+         Channel'Read (Ack);
+         Ack_Message_Types := [for O in Ack.Options => O.DHCP_Message_Type when O.Code = DHCP::DHCP_MESSAGE_TYPE_OPTION];
+      transition
+         then Success
+            if Ack'Valid = True and Ack.Op = DHCP::BOOTREPLY and Ack_Message_Types'Size > 0 and Ack_Message_Types'Head = DHCP::DHCPACK
+         then Failure
+      end Receive_Ack;
+
+      state Success is
+      begin
+      transition
+         then Terminated
+      end Success;
+
+      state Failure is
+      begin
+      transition
+         then Terminated
+      end Failure;
+
+      state Terminated is null state;
+   end Session;
+
+end DHCP_Client;
