@@ -115,7 +115,7 @@ jobs:
         echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
         echo "HYPOTHESIS_PROFILE=ci" >> $GITHUB_ENV
         echo "PYTEST_ADDOPTS=--basetemp=build" >> $GITHUB_ENV
-        sudo apt install graphviz
+        sudo apt install graphviz libgmp-dev patchelf
         python -m pip install --upgrade pip wheel
         PATH="$HOME/bin:$PATH" pip install --user -e .[devel]
     - name: Configure kernel parameters
@@ -165,7 +165,7 @@ jobs:
         echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
         echo "HYPOTHESIS_PROFILE=ci" >> $GITHUB_ENV
         echo "PYTEST_ADDOPTS=--basetemp=build" >> $GITHUB_ENV
-        sudo apt install graphviz
+        sudo apt install graphviz libgmp-dev patchelf
         python -m pip install --upgrade pip wheel
         PATH="$HOME/bin:$PATH" pip install --user -e .[devel]
     - name: Test
