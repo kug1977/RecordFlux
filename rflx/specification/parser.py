@@ -5,7 +5,7 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple, Type, Union
 
-from librecordfluxdsllang import (  # type: ignore
+from librflxlang import (
     AnalysisContext,
     ArrayTypeDef,
     Aspect,

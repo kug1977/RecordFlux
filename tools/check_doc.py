@@ -6,7 +6,7 @@ import pathlib
 import subprocess
 import sys
 
-from librecordfluxdsllang import AnalysisContext  # type: ignore
+from librflxlang import AnalysisContext
 
 import rflx.specification
 from rflx.error import RecordFluxError
