@@ -6,11 +6,11 @@ import pathlib
 import subprocess
 import sys
 
-from librflxlang import AnalysisContext
+from librflxlang import AnalysisContext, GrammarRule
 
 import rflx.specification
 from rflx.error import RecordFluxError
-from rflx.specification.parser import GrammarRule, diagnostics_to_error
+from rflx.specification.parser import diagnostics_to_error
 from tests.const import GENERATED_DIR, SPEC_DIR
 
 
