@@ -222,7 +222,7 @@ package body RFLX.Arrays_Tests is
       Assert (Message.Valid_Message (Context), "Invalid Message after complete parsing");
 
       Message.Take_Buffer (Context, Buffer);
-      Free_Bytes_Ptr (Buffer);
+      RFLX_Types.Free (Buffer);
 
       Assert (Context.Last'Image, RFLX_Builtin_Types.Bit_Length (88)'Image, "Invalid Context.Last");
    end Test_Parsing_Scalar_Array_Sequential;
@@ -458,7 +458,7 @@ package body RFLX.Arrays_Tests is
       pragma Warnings (Off, "unused assignment to ""Context""");
       Message.Take_Buffer (Context, Buffer);
       pragma Warnings (On, "unused assignment to ""Context""");
-      Free_Bytes_Ptr (Buffer);
+      RFLX_Types.Free (Buffer);
    end Test_Parsing_Scalar_Array_Loop;
 
    procedure Test_Generating_Scalar_Array (T : in out AUnit.Test_Cases.Test_Case'Class) with
@@ -586,8 +586,8 @@ package body RFLX.Arrays_Tests is
       Assert (Buffer.all (RFLX_Types.Byte_Index (Context.First) .. RFLX_Types.Byte_Index (Context.Last)), Expected.all,
               "Invalid binary representation");
 
-      Free_Bytes_Ptr (Expected);
-      Free_Bytes_Ptr (Buffer);
+      RFLX_Types.Free (Expected);
+      RFLX_Types.Free (Buffer);
    end Test_Generating_Scalar_Array;
 
    procedure Test_Generating_Scalar_Array_Independent (T : in out AUnit.Test_Cases.Test_Case'Class) with
@@ -686,12 +686,12 @@ package body RFLX.Arrays_Tests is
       Arrays.AV_Enumeration_Vector.Take_Buffer (AV_Enumeration_Vector_Context, AV_Enumeration_Vector_Buffer);
       pragma Warnings (On, "unused assignment to ""*_Context""");
 
-      Free_Bytes_Ptr (Expected);
-      Free_Bytes_Ptr (Buffer);
-      Free_Bytes_Ptr (Modular_Vector_Buffer);
-      Free_Bytes_Ptr (Range_Vector_Buffer);
-      Free_Bytes_Ptr (Enumeration_Vector_Buffer);
-      Free_Bytes_Ptr (AV_Enumeration_Vector_Buffer);
+      RFLX_Types.Free (Expected);
+      RFLX_Types.Free (Buffer);
+      RFLX_Types.Free (Modular_Vector_Buffer);
+      RFLX_Types.Free (Range_Vector_Buffer);
+      RFLX_Types.Free (Enumeration_Vector_Buffer);
+      RFLX_Types.Free (AV_Enumeration_Vector_Buffer);
    end Test_Generating_Scalar_Array_Independent;
 
    procedure Test_Generating_Scalar_Array_Independent_Empty (T : in out AUnit.Test_Cases.Test_Case'Class) with
@@ -788,12 +788,12 @@ package body RFLX.Arrays_Tests is
       Arrays.AV_Enumeration_Vector.Take_Buffer (AV_Enumeration_Vector_Context, AV_Enumeration_Vector_Buffer);
       pragma Warnings (On, "unused assignment to ""*_Context""");
 
-      Free_Bytes_Ptr (Expected);
-      Free_Bytes_Ptr (Buffer);
-      Free_Bytes_Ptr (Modular_Vector_Buffer);
-      Free_Bytes_Ptr (Range_Vector_Buffer);
-      Free_Bytes_Ptr (Enumeration_Vector_Buffer);
-      Free_Bytes_Ptr (AV_Enumeration_Vector_Buffer);
+      RFLX_Types.Free (Expected);
+      RFLX_Types.Free (Buffer);
+      RFLX_Types.Free (Modular_Vector_Buffer);
+      RFLX_Types.Free (Range_Vector_Buffer);
+      RFLX_Types.Free (Enumeration_Vector_Buffer);
+      RFLX_Types.Free (AV_Enumeration_Vector_Buffer);
    end Test_Generating_Scalar_Array_Independent_Empty;
 
    procedure Test_Parsing_Message_Array_Sequential (T : in out AUnit.Test_Cases.Test_Case'Class) with
@@ -877,7 +877,7 @@ package body RFLX.Arrays_Tests is
       Message.Take_Buffer (Context, Buffer);
       pragma Warnings (On, "unused assignment to ""Context""");
 
-      Free_Bytes_Ptr (Buffer);
+      RFLX_Types.Free (Buffer);
    end Test_Parsing_Message_Array_Sequential;
 
    procedure Test_Parsing_Message_Array_Loop (T : in out AUnit.Test_Cases.Test_Case'Class) with
@@ -951,7 +951,7 @@ package body RFLX.Arrays_Tests is
       Message.Take_Buffer (Context, Buffer);
       pragma Warnings (On, "unused assignment to ""Context""");
 
-      Free_Bytes_Ptr (Buffer);
+      RFLX_Types.Free (Buffer);
    end Test_Parsing_Message_Array_Loop;
 
    procedure Test_Generating_Message_Array (T : in out AUnit.Test_Cases.Test_Case'Class) with
@@ -1019,8 +1019,8 @@ package body RFLX.Arrays_Tests is
               Expected.all,
               "Invalid binary representation");
 
-      Free_Bytes_Ptr (Expected);
-      Free_Bytes_Ptr (Buffer);
+      RFLX_Types.Free (Expected);
+      RFLX_Types.Free (Buffer);
    end Test_Generating_Message_Array;
 
    procedure Test_Generating_Message_Array_Independent (T : in out AUnit.Test_Cases.Test_Case'Class) with
@@ -1091,9 +1091,9 @@ package body RFLX.Arrays_Tests is
       Arrays.Inner_Messages.Take_Buffer (Sequence_Context, Sequence_Buffer);
       pragma Warnings (On, "unused assignment to ""Sequence_Context""");
 
-      Free_Bytes_Ptr (Expected);
-      Free_Bytes_Ptr (Buffer);
-      Free_Bytes_Ptr (Sequence_Buffer);
+      RFLX_Types.Free (Expected);
+      RFLX_Types.Free (Buffer);
+      RFLX_Types.Free (Sequence_Buffer);
    end Test_Generating_Message_Array_Independent;
 
    procedure Test_Generating_Message_Array_Independent_Empty (T : in out AUnit.Test_Cases.Test_Case'Class) with
@@ -1131,9 +1131,9 @@ package body RFLX.Arrays_Tests is
       Arrays.Inner_Messages.Take_Buffer (Sequence_Context, Sequence_Buffer);
       pragma Warnings (On, "unused assignment to ""Sequence_Context""");
 
-      Free_Bytes_Ptr (Expected);
-      Free_Bytes_Ptr (Buffer);
-      Free_Bytes_Ptr (Sequence_Buffer);
+      RFLX_Types.Free (Expected);
+      RFLX_Types.Free (Buffer);
+      RFLX_Types.Free (Sequence_Buffer);
    end Test_Generating_Message_Array_Independent_Empty;
 
    procedure Test_Parsing_Array_Size_Defined_By_Message_Size (T : in out AUnit.Test_Cases.Test_Case'Class) with
@@ -1198,7 +1198,7 @@ package body RFLX.Arrays_Tests is
       Message.Take_Buffer (Context, Buffer);
       pragma Warnings (On, "unused assignment to ""Context""");
 
-      Free_Bytes_Ptr (Buffer);
+      RFLX_Types.Free (Buffer);
    end Test_Parsing_Array_Size_Defined_By_Message_Size;
 
    procedure Test_Parsing_Array_Size_Defined_By_Message_Size_Empty (T : in out AUnit.Test_Cases.Test_Case'Class) with
@@ -1226,7 +1226,7 @@ package body RFLX.Arrays_Tests is
       Message.Take_Buffer (Context, Buffer);
       pragma Warnings (On, "unused assignment to ""Context""");
 
-      Free_Bytes_Ptr (Buffer);
+      RFLX_Types.Free (Buffer);
    end Test_Parsing_Array_Size_Defined_By_Message_Size_Empty;
 
    procedure Test_Generating_Array_Size_Defined_By_Message_Size (T : in out AUnit.Test_Cases.Test_Case'Class) with
@@ -1269,8 +1269,8 @@ package body RFLX.Arrays_Tests is
               Expected.all,
               "Invalid binary representation");
 
-      Free_Bytes_Ptr (Buffer);
-      Free_Bytes_Ptr (Expected);
+      RFLX_Types.Free (Buffer);
+      RFLX_Types.Free (Expected);
    end Test_Generating_Array_Size_Defined_By_Message_Size;
 
    procedure Test_Generating_Array_Size_Defined_By_Message_Size_Empty (T : in out AUnit.Test_Cases.Test_Case'Class) with
@@ -1299,8 +1299,8 @@ package body RFLX.Arrays_Tests is
               Expected.all,
               "Invalid binary representation");
 
-      Free_Bytes_Ptr (Buffer);
-      Free_Bytes_Ptr (Expected);
+      RFLX_Types.Free (Buffer);
+      RFLX_Types.Free (Expected);
    end Test_Generating_Array_Size_Defined_By_Message_Size_Empty;
 
    overriding
