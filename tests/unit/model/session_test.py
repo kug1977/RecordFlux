@@ -1427,6 +1427,7 @@ def test_append() -> None:
             State(
                 "Start",
                 transitions=[Transition(target=ID("End"))],
+                exception_transition=Transition(target=ID("End")),
                 declarations=[],
                 actions=[
                     stmt.Append(
@@ -1452,6 +1453,7 @@ def test_append_incompatible() -> None:
             State(
                 "Start",
                 transitions=[Transition(target=ID("End"))],
+                exception_transition=Transition(target=ID("End")),
                 declarations=[],
                 actions=[
                     stmt.Append("Global", expr.Variable("Global"), location=Location((10, 20)))
@@ -1475,6 +1477,7 @@ def test_append_message_unsupported() -> None:
             State(
                 "Start",
                 transitions=[Transition(target=ID("End"))],
+                exception_transition=Transition(target=ID("End")),
                 declarations=[],
                 actions=[
                     stmt.Append("List", expr.Variable("Element", location=Location((10, 20))))
@@ -1504,6 +1507,7 @@ def test_extend() -> None:
             State(
                 "Start",
                 transitions=[Transition(target=ID("End"))],
+                exception_transition=Transition(target=ID("End")),
                 declarations=[],
                 actions=[stmt.Extend("List", expr.Variable("Element"))],
             ),
@@ -1524,6 +1528,7 @@ def test_extend_incompatible() -> None:
             State(
                 "Start",
                 transitions=[Transition(target=ID("End"))],
+                exception_transition=Transition(target=ID("End")),
                 declarations=[],
                 actions=[
                     stmt.Extend("Global", expr.Variable("Global"), location=Location((10, 20)))
