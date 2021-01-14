@@ -105,7 +105,7 @@ def test_range_last() -> None:
 def test_range_serialize() -> None:
     assert models.RANGE_INTEGER.serialize == {
         "data": {
-            "identifier": ["P", "Range"],
+            "identifier": ["P", "Range_Integer"],
             "first": {"data": {"base": 0, "value": 1}, "kind": "Number"},
             "last": {"data": {"base": 0, "value": 100}, "kind": "Number"},
             "size": {"data": {"base": 0, "value": 8}, "kind": "Number"},

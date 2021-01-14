@@ -7,8 +7,7 @@ from typing import Dict, List, Mapping, Optional, Sequence, Tuple, cast
 
 import pkg_resources
 
-import rflx.expression as expr
-from rflx import __version__
+from rflx import __version__, expression as expr
 from rflx.ada import (
     FALSE,
     ID,
@@ -121,22 +120,18 @@ from rflx.model import (
     RangeInteger,
     Refinement,
     Scalar,
+    Session,
     Type,
 )
 
 from . import common, const
 from .parser import ParserGenerator
 from .serializer import SerializerGenerator
+from .session import SessionGenerator
 
 log = logging.getLogger(__name__)
 
 NULL = Variable("null")
-
-CONFIGURATION_PRAGMAS = [
-    Pragma("Style_Checks", [String("N3aAbcdefhiIklnOprStux")]),
-    # ISSUE: Componolit/RecordFlux#508
-    Pragma("Warnings", [Variable("Off"), String("redundant conversion")]),
-]
 
 
 class Generator:
@@ -145,6 +140,7 @@ class Generator:
         self.__reproducible = reproducible
         self.__parser = ParserGenerator(self.__prefix)
         self.__serializer = SerializerGenerator(self.__prefix)
+        self.__session = SessionGenerator(self.__prefix)
 
         self._units: Dict[ID, Unit] = {}
 
@@ -219,6 +215,12 @@ class Generator:
             else:
                 assert False, f'unexpected type "{type(t).__name__}"'
 
+        for s in model.sessions:
+            if s.package not in self._units:
+                self.__create_unit(ID(s.package), [], terminating=False)
+
+            self.__create_session(s)
+
     def __create_refinement(self, refinement: Refinement) -> None:
         self.__create_generic_refinement_unit(refinement)
         self.__create_refinement_unit(refinement)
@@ -233,6 +235,10 @@ class Generator:
     def __create_derived_message(self, message: DerivedMessage) -> None:
         self.__create_message_unit(message)
 
+    def __create_session(self, session: Session) -> None:
+        self.__create_generic_session_unit(session)
+        self.__create_session_unit(session)
+
     def __create_unit(
         self,
         identifier: ID,
@@ -240,7 +246,7 @@ class Generator:
         formal_parameters: List[FormalDeclaration] = None,
         terminating: bool = True,
     ) -> PackageUnit:
-        for p in reversed(CONFIGURATION_PRAGMAS):
+        for p in reversed(const.CONFIGURATION_PRAGMAS):
             declaration_context.insert(0, p)
 
         unit = PackageUnit(
@@ -253,7 +259,7 @@ class Generator:
                     *([Annotate("GNATprove", "Terminating")] if terminating else []),
                 ],
             ),
-            list(CONFIGURATION_PRAGMAS),
+            list(const.CONFIGURATION_PRAGMAS),
             PackageBody(self.__prefix * identifier, aspects=[SparkMode()]),
         )
         self._units[identifier] = unit
@@ -266,7 +272,7 @@ class Generator:
         context: List[ContextItem],
         instantiation: GenericPackageInstantiation,
     ) -> InstantiationUnit:
-        for p in reversed(CONFIGURATION_PRAGMAS):
+        for p in reversed(const.CONFIGURATION_PRAGMAS):
             context.insert(0, p)
 
         unit = InstantiationUnit(context, instantiation)
@@ -289,7 +295,7 @@ class Generator:
 
         context.append(WithClause(self.__prefix * const.GENERIC_TYPES_PACKAGE))
 
-        unit_name = generic_name(ID(message.identifier))
+        unit_name = common.generic_name(ID(message.identifier))
         parameters: List[FormalDeclaration] = [
             FormalPackageDeclaration("Types", self.__prefix * const.GENERIC_TYPES_PACKAGE),
         ]
@@ -2274,9 +2280,9 @@ class Generator:
 
     def __create_message_unit(self, message: Message) -> None:
         if isinstance(message, DerivedMessage):
-            name = generic_name(self.__prefix * ID(message.base.identifier))
+            name = common.generic_name(self.__prefix * ID(message.base.identifier))
         else:
-            name = generic_name(self.__prefix * ID(message.identifier))
+            name = common.generic_name(self.__prefix * ID(message.identifier))
 
         context: List[ContextItem] = [
             Pragma("SPARK_Mode"),
@@ -2299,7 +2305,7 @@ class Generator:
         self.__create_instantiation_unit(ID(message.identifier), context, instantiation)
 
     def __create_generic_refinement_unit(self, refinement: Refinement) -> None:
-        unit_name = generic_name(refinement.package * const.REFINEMENT_PACKAGE)
+        unit_name = common.generic_name(refinement.package * const.REFINEMENT_PACKAGE)
 
         if unit_name in self._units:
             unit = self._units[unit_name]
@@ -2345,9 +2351,9 @@ class Generator:
             )
 
         generic_pdu_identifier = self.__prefix * (
-            generic_name(ID(refinement.pdu.base.identifier))
+            common.generic_name(ID(refinement.pdu.base.identifier))
             if isinstance(refinement.pdu, DerivedMessage)
-            else generic_name(ID(refinement.pdu.identifier))
+            else common.generic_name(ID(refinement.pdu.identifier))
         )
 
         unit.declaration_context.append(WithClause(generic_pdu_identifier))
@@ -2360,9 +2366,9 @@ class Generator:
         )
 
         generic_sdu_identifier = self.__prefix * (
-            generic_name(ID(refinement.sdu.base.identifier))
+            common.generic_name(ID(refinement.sdu.base.identifier))
             if isinstance(refinement.sdu, DerivedMessage)
-            else generic_name(ID(refinement.sdu.identifier))
+            else common.generic_name(ID(refinement.sdu.identifier))
         )
 
         if not null_sdu:
@@ -2387,7 +2393,7 @@ class Generator:
 
     def __create_refinement_unit(self, refinement: Refinement) -> None:
         unit_name = refinement.package * const.REFINEMENT_PACKAGE
-        generic_unit_name = generic_name(
+        generic_unit_name = common.generic_name(
             self.__prefix * ID(refinement.package) * const.REFINEMENT_PACKAGE
         )
 
@@ -2951,6 +2957,51 @@ class Generator:
             ),
         ]
 
+    def __create_generic_session_unit(self, session: Session) -> None:
+        context: List[ContextItem] = []
+
+        # if any(t.package == BUILTINS_PACKAGE for t in session.types.values()):
+        #     context.extend(
+        #         [
+        #             WithClause(self.__prefix * const.BUILTIN_TYPES_PACKAGE),
+        #             WithClause(self.__prefix * const.BUILTIN_TYPES_CONVERSIONS_PACKAGE),
+        #             UsePackageClause(self.__prefix * const.BUILTIN_TYPES_CONVERSIONS_PACKAGE),
+        #         ]
+        #     )
+
+        context.append(WithClause(self.__prefix * const.GENERIC_TYPES_PACKAGE))
+
+        unit_name = common.generic_name(ID(session.identifier))
+        parameters: List[FormalDeclaration] = [
+            FormalPackageDeclaration("Types", self.__prefix * const.GENERIC_TYPES_PACKAGE),
+        ]
+        unit = self.__create_unit(unit_name, context, parameters)
+
+        self.__session.create_generic_session(unit, session)
+
+    def __create_session_unit(self, session: Session) -> None:
+        name = common.generic_name(self.__prefix * ID(session.identifier))
+
+        context: List[ContextItem] = [
+            Pragma("SPARK_Mode"),
+            WithClause(name),
+            WithClause(self.__prefix * const.TYPES_PACKAGE),
+        ]
+
+        types = [
+            self.__prefix * ID(t.identifier)
+            for t in session.types.values()
+            if isinstance(t, (Array, Message))
+        ]
+        context.extend(WithClause(array) for array in types)
+        instantiation = GenericPackageInstantiation(
+            self.__prefix * ID(session.identifier),
+            name,
+            [self.__prefix * const.TYPES_PACKAGE] + types,
+        )
+
+        self.__create_instantiation_unit(ID(session.identifier), context, instantiation)
+
 
 def create_file(filename: Path, content: str) -> None:
     log.info("Creating %s", filename)
@@ -3015,10 +3066,6 @@ def enumeration_types(enum: Enumeration) -> List[TypeDeclaration]:
         )
 
     return types
-
-
-def generic_name(identifier: ID) -> ID:
-    return ID([*identifier.parts[:-1], f"Generic_{identifier.parts[-1]}"])
 
 
 def contains_function_name(refinement: Refinement) -> str:

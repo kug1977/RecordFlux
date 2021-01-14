@@ -56,6 +56,9 @@ TLV_MESSAGE = Message(
 )
 TLV_MODEL = Model([TLV_TAG, TLV_LENGTH, TLV_MESSAGE])
 
+TLV_MESSAGES = Array("TLV::Messages", TLV_MESSAGE)
+TLV_TAGS = Array("TLV::Tags", TLV_TAG)
+
 NULL_MESSAGE_IN_TLV_MESSAGE = Refinement("In_TLV", TLV_MESSAGE, Field("Value"), NULL_MESSAGE)
 NULL_MESSAGE_IN_TLV_MESSAGE_MODEL = Model(
     [TLV_TAG, TLV_LENGTH, TLV_MESSAGE, NULL_MESSAGE, NULL_MESSAGE_IN_TLV_MESSAGE]
@@ -261,7 +264,7 @@ INVALID_MESSAGE = UnprovenMessage(
 )
 
 MODULAR_INTEGER = ModularInteger("P::Modular", Number(256))
-RANGE_INTEGER = RangeInteger("P::Range", Number(1), Number(100), Number(8))
+RANGE_INTEGER = RangeInteger("P::Range_Integer", Number(1), Number(100), Number(8))
 ENUMERATION = Enumeration(
     "P::Enumeration",
     [("Zero", Number(0)), ("One", Number(1)), ("Two", Number(2))],

@@ -12,6 +12,7 @@ class Statement(Base):
     def __init__(self, identifier: StrID, location: Location = None):
         self.identifier = ID(identifier)
         self.location = location
+        self.type_: rty.Type = rty.Undefined()
 
     @abstractmethod
     def check_type(
@@ -36,6 +37,7 @@ class Assignment(Statement):
     def check_type(
         self, statement_type: rty.Type, typify_variable: Callable[[Expr], Expr]
     ) -> RecordFluxError:
+        self.type_ = statement_type
         self.expression = self.expression.substituted(typify_variable)
         return rty.check_type_instance(
             statement_type, rty.Any, self.location, f'variable "{self.identifier}"'
@@ -79,35 +81,45 @@ class Append(ListAttributeStatement):
     def check_type(
         self, statement_type: rty.Type, typify_variable: Callable[[Expr], Expr]
     ) -> RecordFluxError:
-        assert isinstance(self.parameters, list)
-        self.parameters[0] = self.parameters[0].substituted(typify_variable)
+        self.type_ = statement_type
+        self.parameter = self.parameter.substituted(typify_variable)
         error = rty.check_type_instance(
             statement_type, rty.Array, self.location, f'variable "{self.identifier}"'
         )
         if isinstance(statement_type, rty.Array):
-            error += self.parameters[0].check_type(statement_type.element)
+            error += self.parameter.check_type(statement_type.element)
             if isinstance(statement_type.element, rty.Message) and isinstance(
-                self.parameters[0], Variable
+                self.parameter, Variable
             ):
                 error.append(
                     "appending independently created message not supported",
                     Subsystem.MODEL,
                     Severity.ERROR,
-                    self.parameters[0].location,
+                    self.parameter.location,
                 )
                 error.append(
                     "message aggregate should be used instead",
                     Subsystem.MODEL,
                     Severity.INFO,
-                    self.parameters[0].location,
+                    self.parameter.location,
                 )
         return error
+
+    @property
+    def parameter(self) -> Expr:
+        return self.parameters[0]
+
+    @parameter.setter
+    def parameter(self, value: Expr) -> None:
+        assert isinstance(self.parameters, list)
+        self.parameters[0] = value
 
 
 class Extend(ListAttributeStatement):
     def check_type(
         self, statement_type: rty.Type, typify_variable: Callable[[Expr], Expr]
     ) -> RecordFluxError:
+        self.type_ = statement_type
         assert isinstance(self.parameters, list)
         self.parameters[0] = self.parameters[0].substituted(typify_variable)
         return rty.check_type_instance(
@@ -122,6 +134,7 @@ class Reset(AttributeStatement):
     def check_type(
         self, statement_type: rty.Type, typify_variable: Callable[[Expr], Expr]
     ) -> RecordFluxError:
+        self.type_ = statement_type
         return rty.check_type_instance(
             statement_type,
             (rty.Array, rty.Message),
@@ -140,6 +153,7 @@ class ChannelAttributeStatement(AttributeStatement):
     def check_type(
         self, statement_type: rty.Type, typify_variable: Callable[[Expr], Expr]
     ) -> RecordFluxError:
+        self.type_ = statement_type
         self.parameters = [self.parameters[0].substituted(typify_variable)]
         return (
             rty.check_type(

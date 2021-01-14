@@ -98,6 +98,8 @@ class VariableDeclaration(TypeCheckableDeclaration, BasicDeclaration):
         self.type_ = declaration_type
 
         if self.expression is not None:
+            # FIXME: prevent initialization of message variable
+            # FIXME: prevent list comprehension in initialization
             self.expression = self.expression.substituted(typify_variable)
             return self.expression.check_type(self.type_)
 

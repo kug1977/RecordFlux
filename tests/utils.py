@@ -85,14 +85,23 @@ def assert_compilable_code(model: Model, tmp_path: pathlib.Path, prefix: str = N
         )
 
 
-def assert_provable_code(model: Model, tmp_path: pathlib.Path, prefix: str = None) -> None:
+def assert_provable_code(
+    model: Model, tmp_path: pathlib.Path, prefix: str = None, units: Sequence[str] = None
+) -> None:
     _create_files(tmp_path, model, prefix)
 
-    p = subprocess.run(["gnatprove", "-Ptest"], cwd=tmp_path, check=False, stderr=subprocess.PIPE)
-    if p.returncode:
-        raise AssertionError(
-            f"non-zero exit status {p.returncode}\n{p.stderr.decode('utf-8')}",
-        )
+    def run(command: Sequence[str]) -> None:
+        p = subprocess.run(command, cwd=tmp_path, check=False, stderr=subprocess.PIPE)
+        if p.returncode:
+            raise AssertionError(
+                f"non-zero exit status {p.returncode}\n{p.stderr.decode('utf-8')}",
+            )
+
+    if units:
+        for unit in units:
+            run(["gnatprove", "-Ptest", "-u", unit])
+    else:
+        run(["gnatprove", "-Ptest"])
 
 
 def _create_files(tmp_path: pathlib.Path, model: Model, prefix: str = None) -> None:

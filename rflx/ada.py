@@ -479,7 +479,10 @@ class Aggregate(Expr):
         self.elements = list(elements)
 
     def _update_str(self) -> None:
-        self._str = intern("(" + ", ".join(map(str, self.elements)) + ")")
+        if len(self.elements) == 1:
+            self._str = intern("( Types.Index'First => " + ", ".join(map(str, self.elements)) + ")")
+        else:
+            self._str = intern("(" + ", ".join(map(str, self.elements)) + ")")
 
     @property
     def precedence(self) -> Precedence:
@@ -500,9 +503,9 @@ class String(Aggregate):
 
 
 class NamedAggregate(Expr):
-    def __init__(self, *elements: Tuple[StrID, Expr]) -> None:
+    def __init__(self, *elements: Tuple[Union[StrID, "ValueRange"], Expr]) -> None:
         super().__init__()
-        self.elements = [(ID(n), e) for n, e in elements]
+        self.elements = [(ID(n) if isinstance(n, str) else n, e) for n, e in elements]
 
     def _update_str(self) -> None:
         self._str = intern(
@@ -717,6 +720,38 @@ class Conversion(Expr):
     @property
     def precedence(self) -> Precedence:
         return Precedence.literal
+
+
+class QualifiedExpr(Expr):
+    def __init__(self, type_identifier: StrID, expression: Expr) -> None:
+        super().__init__()
+        self.type_identifier = ID(type_identifier)
+        self.expression = expression
+
+    def _update_str(self) -> None:
+        operand = (
+            str(self.expression)
+            if isinstance(self.expression, (Aggregate, NamedAggregate))
+            else f"({self.expression})"
+        )
+        self._str = intern(f"{self.type_identifier}'{operand}")
+
+    @property
+    def precedence(self) -> Precedence:
+        raise NotImplementedError
+
+
+class New(Expr):
+    def __init__(self, expression: Expr) -> None:
+        super().__init__()
+        self.expression = expression
+
+    def _update_str(self) -> None:
+        self._str = intern(f"new {self.expression}")
+
+    @property
+    def precedence(self) -> Precedence:
+        raise NotImplementedError
 
 
 class Declaration(Base):
@@ -981,19 +1016,27 @@ class PackageBody(Declaration):
         self,
         identifier: StrID,
         declarations: List[Declaration] = None,
+        statements: List["Statement"] = None,
         aspects: List[Aspect] = None,
     ) -> None:
         self.identifier = ID(identifier)
         self.declarations = declarations or []
+        self.statements = statements or []
         self.aspects = aspects or []
 
     def __str__(self) -> str:
-        if not self.declarations:
+        if not self.declarations and not self.statements:
             return ""
+
+        statements = (
+            ("begin\n\n" + indent("\n".join(map(str, self.statements)), 3) + "\n\n")
+            if self.statements
+            else ""
+        )
 
         return (
             f"package body {self.identifier}{aspect_specification(self.aspects)}\nis\n\n"
-            f"{declarative_items(self.declarations)}end {self.identifier};\n"
+            f"{declarative_items(self.declarations)}{statements}end {self.identifier};\n"
         )
 
 
@@ -1026,6 +1069,9 @@ class ObjectDeclaration(Declaration):
         self.expression = expression
         self.constant = constant
         self.aspects = aspects or []
+
+    def __hash__(self) -> int:
+        return hash(tuple(self.identifiers))
 
     def __str__(self) -> str:
         identifiers = ", ".join(map(str, self.identifiers))
@@ -1331,10 +1377,12 @@ class PragmaStatement(Statement):
 
 
 class ReturnStatement(Statement):
-    def __init__(self, expression: Expr) -> None:
+    def __init__(self, expression: Expr = None) -> None:
         self.expression = expression
 
     def __str__(self) -> str:
+        if not self.expression:
+            return "return;"
         if isinstance(self.expression, CaseExpr):
             return "return (" + indent_next(str(self.expression), 8) + ");"
         return "return " + indent_next(str(self.expression), 7) + ";"
@@ -1346,11 +1394,13 @@ class IfStatement(Statement):
         condition_statements: Sequence[Tuple[Expr, Sequence[Statement]]],
         else_statements: Sequence[Statement] = None,
     ) -> None:
+        assert condition_statements or else_statements
         self.condition_statements = condition_statements
         self.else_statements = else_statements
 
     def __str__(self) -> str:
         result = ""
+
         for condition, statements in self.condition_statements:
             c = (
                 f" {condition} "
@@ -1362,12 +1412,18 @@ class IfStatement(Statement):
             else:
                 result += f"elsif{c}then\n"
             for statement in statements:
-                result += indent(str(statement), 3) + "\n"
+                result += indent(f"{statement}\n", 3)
+
         if self.else_statements:
-            result += "else\n"
-            for statement in self.else_statements:
-                result += indent(str(statement), 3) + "\n"
+            else_statements = "\n".join(map(str, self.else_statements))
+
+            if not self.condition_statements:
+                return else_statements
+
+            result += f"else\n{indent(else_statements, 3)}\n"
+
         result += "end if;"
+
         return result
 
 
@@ -1393,6 +1449,30 @@ class CaseStatement(Statement):
         )
 
         return f"case {self.control_expression} is{indent(cases, 3)}\nend case;"
+
+
+class While(Statement):
+    def __init__(self, condition: Expr, statements: Sequence[Statement]) -> None:
+        assert len(statements) > 0
+        self.condition = condition
+        self.statements = statements
+
+    def __str__(self) -> str:
+        statements = indent("\n".join(str(s) for s in self.statements), 3)
+        return f"while {self.condition} loop\n{statements}\nend loop;"
+
+
+class Declare(Statement):
+    def __init__(
+        self, declarations: Sequence[Declaration], statements: Sequence[Statement]
+    ) -> None:
+        self.declarations = declarations
+        self.statements = statements
+
+    def __str__(self) -> str:
+        declarations = indent("\n".join(str(s) for s in self.declarations), 3)
+        statements = indent("\n".join(str(s) for s in self.statements), 3)
+        return f"declare\n{declarations}\nbegin\n{statements}\nend;"
 
 
 class Parameter(Base):
@@ -1664,6 +1744,7 @@ class PackageUnit(Unit):
                 other.private
             )
             self.body.declarations = self.body.declarations + list(other.body)
+            self.body.statements += list(other.statements)
             return self
         return NotImplemented
 
@@ -1708,6 +1789,7 @@ class UnitPart:
     specification: Sequence[Declaration] = dataclass_field(default_factory=list)
     body: Sequence[Declaration] = dataclass_field(default_factory=list)
     private: Sequence[Declaration] = dataclass_field(default_factory=list)
+    statements: Sequence[Statement] = dataclass_field(default_factory=list)
 
 
 @dataclass
@@ -1715,6 +1797,7 @@ class SubprogramUnitPart:
     specification: Sequence[Subprogram] = dataclass_field(default_factory=list)
     body: Sequence[Subprogram] = dataclass_field(default_factory=list)
     private: Sequence[Subprogram] = dataclass_field(default_factory=list)
+    statements: Sequence[Statement] = dataclass_field(default_factory=list)
 
 
 def generic_formal_part(parameters: Sequence[FormalDeclaration] = None) -> str:

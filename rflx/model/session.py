@@ -100,8 +100,16 @@ class State(Base):
         return self.__actions
 
     @property
+    def is_null(self) -> bool:
+        return not self.__transitions
+
+    @property
     def has_exceptions(self) -> bool:
-        return any(isinstance(a, (stmt.Append, stmt.Extend)) for a in self.__actions)
+        return any(
+            isinstance(a, (stmt.Append, stmt.Extend))
+            or (isinstance(a, stmt.Assignment) and isinstance(a.expression, expr.Comprehension))
+            for a in self.__actions
+        )
 
 
 class Session(Base):
@@ -194,6 +202,7 @@ class Session(Base):
         self.__validate_state_existence()
         self.__validate_duplicate_states()
         self.__validate_state_reachability()
+        # FIXME: ensure final state is null state
 
     def __validate_state_existence(self) -> None:
         state_identifiers = [s.identifier for s in self.states]

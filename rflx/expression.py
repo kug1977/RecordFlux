@@ -1512,6 +1512,48 @@ class String(Aggregate):
         return z3.BoolVal(False)
 
 
+class NamedAggregate(Expr):
+    """Only used by code generator and therefore provides minimum functionality"""
+
+    def __init__(self, *elements: Tuple[Union[StrID, "ValueRange"], Expr]) -> None:
+        super().__init__()
+        self.elements = [(ID(n) if isinstance(n, str) else n, e) for n, e in elements]
+
+    def _update_str(self) -> None:
+        self._str = intern(
+            "(" + ", ".join(f"{name} => {element}" for name, element in self.elements) + ")"
+        )
+
+    def __neg__(self) -> Expr:
+        raise NotImplementedError
+
+    def _check_type_subexpr(self) -> RecordFluxError:
+        raise NotImplementedError
+
+    @property
+    def precedence(self) -> Precedence:
+        return Precedence.literal
+
+    def simplified(self) -> Expr:
+        return self
+
+    def ada_expr(self) -> ada.Expr:
+        elements: List[Tuple[Union[ada.StrID, ada.ValueRange], ada.Expr]] = [
+            (
+                ada.ID(n)
+                if isinstance(n, ID)
+                else ada.ValueRange(n.lower.ada_expr(), n.upper.ada_expr()),
+                e.ada_expr(),
+            )
+            for n, e in self.elements
+        ]
+        return ada.NamedAggregate(*elements)
+
+    @lru_cache(maxsize=None)
+    def z3expr(self) -> z3.ExprRef:
+        raise NotImplementedError
+
+
 class Relation(BinExpr):
     def __init__(self, left: Expr, right: Expr, location: Location = None) -> None:
         super().__init__(left, right, rty.BOOLEAN, location)

@@ -649,6 +649,10 @@ def prefixed_type_identifier(type_identifier: ada.ID, prefix: str) -> ada.ID:
     return prefix * type_identifier
 
 
+def generic_name(identifier: ada.ID) -> ada.ID:
+    return ada.ID([*identifier.parts[:-1], f"Generic_{identifier.parts[-1]}"])
+
+
 def base_type_name(scalar_type: Scalar) -> ada.ID:
     if isinstance(scalar_type, ModularInteger):
         return ada.ID(scalar_type.name)
