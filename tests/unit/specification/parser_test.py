@@ -138,7 +138,7 @@ def test_parse_duplicate_specifications() -> None:
                 "_kind": "Specification",
                 "context_clause": [],
                 "package_declaration": {
-                    "_kind": "PackageSpec",
+                    "_kind": "PackageNode",
                     "declarations": [],
                     "end_identifier": {"_kind": "UnqualifiedID", "_value": "Empty_Package"},
                     "identifier": {"_kind": "UnqualifiedID", "_value": "Empty_Package"},
@@ -156,7 +156,7 @@ def test_parse_empty_package_spec() -> None:
                 "_kind": "Specification",
                 "context_clause": [],
                 "package_declaration": {
-                    "_kind": "PackageSpec",
+                    "_kind": "PackageNode",
                     "declarations": [],
                     "end_identifier": {"_kind": "UnqualifiedID", "_value": "Empty_Package"},
                     "identifier": {"_kind": "UnqualifiedID", "_value": "Empty_Package"},
@@ -183,7 +183,7 @@ def test_parse_context_spec() -> None:
                     },
                 ],
                 "package_declaration": {
-                    "_kind": "PackageSpec",
+                    "_kind": "PackageNode",
                     "declarations": [],
                     "end_identifier": {"_kind": "UnqualifiedID", "_value": "Context"},
                     "identifier": {"_kind": "UnqualifiedID", "_value": "Context"},
@@ -193,7 +193,7 @@ def test_parse_context_spec() -> None:
                 "_kind": "Specification",
                 "context_clause": [],
                 "package_declaration": {
-                    "_kind": "PackageSpec",
+                    "_kind": "PackageNode",
                     "declarations": [],
                     "end_identifier": {"_kind": "UnqualifiedID", "_value": "Empty_Package"},
                     "identifier": {"_kind": "UnqualifiedID", "_value": "Empty_Package"},
@@ -209,7 +209,7 @@ def test_parse_integer_type_spec() -> None:
             "_kind": "Specification",
             "context_clause": [],
             "package_declaration": {
-                "_kind": "PackageSpec",
+                "_kind": "PackageNode",
                 "declarations": [
                     {
                         "_kind": "TypeDecl",
@@ -271,7 +271,7 @@ def test_parse_enumeration_type_spec() -> None:
             "_kind": "Specification",
             "context_clause": [],
             "package_declaration": {
-                "_kind": "PackageSpec",
+                "_kind": "PackageNode",
                 "declarations": [
                     {
                         "_kind": "TypeDecl",
@@ -467,7 +467,7 @@ def test_parse_array_type_spec() -> None:
             "_kind": "Specification",
             "context_clause": [],
             "package_declaration": {
-                "_kind": "PackageSpec",
+                "_kind": "PackageNode",
                 "declarations": [
                     {
                         "_kind": "TypeDecl",
@@ -594,7 +594,7 @@ def test_parse_message_type_spec() -> None:
             "_kind": "Specification",
             "context_clause": [],
             "package_declaration": {
-                "_kind": "PackageSpec",
+                "_kind": "PackageNode",
                 "declarations": [
                     {
                         "_kind": "TypeDecl",
@@ -767,7 +767,7 @@ def test_parse_type_refinement_spec() -> None:
             "_kind": "Specification",
             "context_clause": [],
             "package_declaration": {
-                "_kind": "PackageSpec",
+                "_kind": "PackageNode",
                 "declarations": [
                     {
                         "_kind": "TypeDecl",
@@ -939,10 +939,10 @@ def test_parse_type_refinement_spec() -> None:
                 }
             ],
             "package_declaration": {
-                "_kind": "PackageSpec",
+                "_kind": "PackageNode",
                 "declarations": [
                     {
-                        "_kind": "RefinementSpec",
+                        "_kind": "RefinementDecl",
                         "condition": {
                             "_kind": "BinOp",
                             "left": {
@@ -969,7 +969,7 @@ def test_parse_type_refinement_spec() -> None:
                         },
                     },
                     {
-                        "_kind": "RefinementSpec",
+                        "_kind": "RefinementDecl",
                         "condition": None,
                         "field": {"_kind": "UnqualifiedID", "_value": "Bar"},
                         "pdu": {
@@ -1046,7 +1046,7 @@ def test_parse_ethernet_spec() -> None:
             "_kind": "Specification",
             "context_clause": [],
             "package_declaration": {
-                "_kind": "PackageSpec",
+                "_kind": "PackageNode",
                 "declarations": [
                     {
                         "_kind": "TypeDecl",

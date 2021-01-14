@@ -22,12 +22,12 @@ from librflxlang import (
     MessageTypeDef,
     ModularTypeDef,
     NullID,
-    PackageSpec,
+    PackageNode,
     RangeTypeDef,
-    RefinementSpec,
+    RefinementDecl,
     RenamingDecl,
     RFLXNode,
-    SessionSpec,
+    SessionDecl,
     Specification,
     State,
     Statement,
@@ -211,7 +211,7 @@ def create_state(state: State, filename: Path = None) -> rsess.State:
 
 
 def create_session(
-    session: SessionSpec,
+    session: SessionDecl,
     package: ID,
     types: Sequence[RFLXType] = None,
     filename: Path = None,
@@ -1168,7 +1168,7 @@ def create_proven_message(
 
 
 def create_refinement(
-    refinement: RefinementSpec, package: ID, types: Sequence[RFLXType], filename: Path
+    refinement: RefinementDecl, package: ID, types: Sequence[RFLXType], filename: Path
 ) -> Refinement:
     messages = {t.identifier: t for t in types if isinstance(t, Message)}
 
@@ -1206,7 +1206,7 @@ def create_refinement(
 
 
 def check_naming(
-    error: RecordFluxError, package: PackageSpec, _filename: Path, origname: Path = None
+    error: RecordFluxError, package: PackageNode, _filename: Path, origname: Path = None
 ) -> None:
     name = origname or Path("<stdin>")
     identifier = package.f_identifier.text
@@ -1386,7 +1386,7 @@ class Parser:
                 except RecordFluxError as e:
                     error.extend(e)
             else:
-                if t.kind_name == "RefinementSpec":
+                if t.kind_name == "RefinementDecl":
                     try:
                         new_type = create_refinement(t, package_id, self.__types, filename)
                         self.__types.append(new_type)
@@ -1394,7 +1394,7 @@ class Parser:
                     except RecordFluxError as e:
                         error.extend(e)
                 else:
-                    assert t.kind_name == "SessionSpec"
+                    assert t.kind_name == "SessionDecl"
                     new_session = create_session(t, package_id, self.__types, filename)
                     self.__sessions.append(new_session)
                     error.extend(new_session.error)
