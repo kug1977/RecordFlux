@@ -35,7 +35,7 @@ jobs:
     - name: Install dependencies
       run: |
         mkdir $HOME/bin
-        echo -e '#!/bin/sh\ndocker run -u $(id -u):$(id -g) -v $HOME:$HOME -w $PWD componolit/ci:gnat-community-2020 gprbuild $@' > $HOME/bin/gprbuild
+        echo -e '#!/bin/sh\ndocker run -u $(id -u):$(id -g) -v /tmp:/tmp -v $HOME:$HOME -w $PWD componolit/ci:gnat-community-2020 gprbuild $@' > $HOME/bin/gprbuild
         chmod +x $HOME/bin/gprbuild
         echo "$HOME/.local/bin" >> $GITHUB_PATH
         echo "$HOME/bin" >> $GITHUB_PATH
@@ -108,7 +108,7 @@ jobs:
     - name: Install dependencies
       run: |
         mkdir $HOME/bin
-        echo -e '#!/bin/sh\ndocker run -u $(id -u):$(id -g) -v $HOME:$HOME -w $PWD componolit/ci:gnat-community-2020 gprbuild $@' > $HOME/bin/gprbuild
+        echo -e '#!/bin/sh\ndocker run -u $(id -u):$(id -g) -v /tmp:/tmp -v $HOME:$HOME -w $PWD componolit/ci:gnat-community-2020 gprbuild $@' > $HOME/bin/gprbuild
         chmod +x $HOME/bin/gprbuild
         echo "$HOME/.local/bin" >> $GITHUB_PATH
         echo "$HOME/bin" >> $GITHUB_PATH
@@ -156,11 +156,11 @@ jobs:
     - name: Install dependencies
       run: |
         mkdir $HOME/bin
-        echo -e '#!/bin/sh\ndocker run -u $(id -u):$(id -g) -v $HOME:$HOME -w $PWD componolit/ci:gnat-community-2020 gprbuild $@' > $HOME/bin/gprbuild
+        echo -e '#!/bin/sh\ndocker run -u $(id -u):$(id -g) -v /tmp:/tmp -v $HOME:$HOME -w $PWD componolit/ci:gnat-community-2020 gprbuild $@' > $HOME/bin/gprbuild
         chmod +x $HOME/bin/gprbuild
-        echo -e '#!/bin/sh\ndocker run -u $(id -u):$(id -g) -v $HOME:$HOME -w $PWD componolit/ci:gnat-community-2020 gnatprove $@' > $HOME/bin/gnatprove
+        echo -e '#!/bin/sh\ndocker run -u $(id -u):$(id -g) -v /tmp:/tmp -v $HOME:$HOME -w $PWD componolit/ci:gnat-community-2020 gnatprove $@' > $HOME/bin/gnatprove
         chmod +x $HOME/bin/gnatprove
-        echo -e '#!/bin/sh\ndocker run -u $(id -u):$(id -g) -v $HOME:$HOME -w $PWD componolit/ci:gnat-community-2020 gnatprove $@' > $HOME/bin/gnatpp
+        echo -e '#!/bin/sh\ndocker run -u $(id -u):$(id -g) -v /tmp:/tmp -v $HOME:$HOME -w $PWD componolit/ci:gnat-community-2020 gnatprove $@' > $HOME/bin/gnatpp
         chmod +x $HOME/bin/gnatpp
         echo "$HOME/.local/bin" >> $GITHUB_PATH
         echo "$HOME/bin" >> $GITHUB_PATH
@@ -191,7 +191,7 @@ jobs:
     - name: Install GNAT
       run: |
         mkdir $HOME/bin
-        echo -e '#!/bin/sh\ndocker run -u $(id -u):$(id -g) -v $HOME:$HOME -w $PWD componolit/ci:gnat-community-2020 gprbuild $@' > $HOME/bin/gprbuild
+        echo -e '#!/bin/sh\ndocker run -u $(id -u):$(id -g) -v /tmp:/tmp -v $HOME:$HOME -w $PWD componolit/ci:gnat-community-2020 gprbuild $@' > $HOME/bin/gprbuild
         chmod +x $HOME/bin/gprbuild
         echo "$HOME/bin" >> $GITHUB_PATH
     - name: Test
@@ -208,7 +208,7 @@ jobs:
     - name: Install GNAT
       run: |
         mkdir $HOME/bin
-        echo -e '#!/bin/sh\ndocker run -u $(id -u):$(id -g) -v $HOME:$HOME -w $PWD componolit/ci:gnat-community-2020 gprbuild $@' > $HOME/bin/gprbuild
+        echo -e '#!/bin/sh\ndocker run -u $(id -u):$(id -g) -v /tmp:/tmp -v $HOME:$HOME -w $PWD componolit/ci:gnat-community-2020 gprbuild $@' > $HOME/bin/gprbuild
         chmod +x $HOME/bin/gprbuild
         echo "$HOME/bin" >> $GITHUB_PATH
     - name: Build runtime
