@@ -811,8 +811,8 @@ def create_range(
     size = create_math_expression(rangetype.f_size.f_value, filename, identifier.parent)
     return RangeInteger(
         identifier,
-        create_math_expression(rangetype.f_lower, filename, identifier.parent),
-        create_math_expression(rangetype.f_upper, filename, identifier.parent),
+        create_math_expression(rangetype.f_first, filename, identifier.parent),
+        create_math_expression(rangetype.f_last, filename, identifier.parent),
         size,
         node_location(rangetype, filename),
     )
@@ -1030,8 +1030,8 @@ def create_message_aspects(
                 elif value.kind_name == "ChecksumValueRange":
                     exprs.append(
                         rexpr.ValueRange(
-                            create_math_expression(value.f_lower, filename),
-                            create_math_expression(value.f_upper, filename),
+                            create_math_expression(value.f_first, filename),
+                            create_math_expression(value.f_last, filename),
                         )
                     )
                 else:

@@ -215,13 +215,13 @@ def test_parse_integer_type_spec() -> None:
                         "_kind": "TypeDecl",
                         "definition": {
                             "_kind": "RangeTypeDef",
-                            "lower": {"_kind": "NumericLiteral", "_value": "1"},
+                            "first": {"_kind": "NumericLiteral", "_value": "1"},
                             "size": {
                                 "_kind": "Aspect",
                                 "identifier": {"_kind": "UnqualifiedID", "_value": "Size"},
                                 "value": {"_kind": "NumericLiteral", "_value": "16"},
                             },
-                            "upper": {"_kind": "NumericLiteral", "_value": "2_000"},
+                            "last": {"_kind": "NumericLiteral", "_value": "2_000"},
                         },
                         "identifier": {"_kind": "UnqualifiedID", "_value": "Page_Num"},
                     },
@@ -229,13 +229,13 @@ def test_parse_integer_type_spec() -> None:
                         "_kind": "TypeDecl",
                         "definition": {
                             "_kind": "RangeTypeDef",
-                            "lower": {"_kind": "NumericLiteral", "_value": "0"},
+                            "first": {"_kind": "NumericLiteral", "_value": "0"},
                             "size": {
                                 "_kind": "Aspect",
                                 "identifier": {"_kind": "UnqualifiedID", "_value": "Size"},
                                 "value": {"_kind": "NumericLiteral", "_value": "8"},
                             },
-                            "upper": {"_kind": "NumericLiteral", "_value": "255"},
+                            "last": {"_kind": "NumericLiteral", "_value": "255"},
                         },
                         "identifier": {"_kind": "UnqualifiedID", "_value": "Line_Size"},
                     },
@@ -1065,13 +1065,13 @@ def test_parse_ethernet_spec() -> None:
                         "_kind": "TypeDecl",
                         "definition": {
                             "_kind": "RangeTypeDef",
-                            "lower": {"_kind": "NumericLiteral", "_value": "46"},
+                            "first": {"_kind": "NumericLiteral", "_value": "46"},
                             "size": {
                                 "_kind": "Aspect",
                                 "identifier": {"_kind": "UnqualifiedID", "_value": "Size"},
                                 "value": {"_kind": "NumericLiteral", "_value": "16"},
                             },
-                            "upper": {
+                            "last": {
                                 "_kind": "BinOp",
                                 "left": {
                                     "_kind": "BinOp",
@@ -1089,13 +1089,13 @@ def test_parse_ethernet_spec() -> None:
                         "_kind": "TypeDecl",
                         "definition": {
                             "_kind": "RangeTypeDef",
-                            "lower": {"_kind": "NumericLiteral", "_value": "16#8100#"},
+                            "first": {"_kind": "NumericLiteral", "_value": "16#8100#"},
                             "size": {
                                 "_kind": "Aspect",
                                 "identifier": {"_kind": "UnqualifiedID", "_value": "Size"},
                                 "value": {"_kind": "NumericLiteral", "_value": "16"},
                             },
-                            "upper": {"_kind": "NumericLiteral", "_value": "16#8100#"},
+                            "last": {"_kind": "NumericLiteral", "_value": "16#8100#"},
                         },
                         "identifier": {"_kind": "UnqualifiedID", "_value": "TPID"},
                     },

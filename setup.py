@@ -47,7 +47,7 @@ setup(
         "pydotplus >=2, <3",
         "z3-solver >=4, <5",
         "RecordFlux-language@git+https://github.com/Componolit/RecordFlux-language.git"
-        "@develop#egg=RecordFlux-language",
+        "@master#egg=RecordFlux-language",
     ],
     extras_require={
         "devel": [
