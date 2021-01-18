@@ -153,6 +153,8 @@ is
 
    function Has_Buffer (Ctx : Context) return Boolean;
 
+   function Available_Space (Ctx : Context) return Types.Bit_Length;
+
    function Sequence_Last (Ctx : Context) return Types.Bit_Length with
      Annotate =>
        (GNATprove, Inline_For_Proof),

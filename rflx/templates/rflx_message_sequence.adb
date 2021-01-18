@@ -65,4 +65,7 @@ is
    function Has_Buffer (Ctx : Context) return Boolean is
      (Ctx.Buffer /= null);
 
+   function Available_Space (Ctx : Context) return Types.Bit_Length is
+      (Ctx.Last - Ctx.Sequence_Last);
+
 end {prefix}RFLX_Message_Sequence;
