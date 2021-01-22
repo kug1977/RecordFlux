@@ -2482,6 +2482,45 @@ def test_is_possibly_empty() -> None:
     assert message.is_possibly_empty(c)
 
 
+def test_size() -> None:
+    assert TLV_MESSAGE.size({Field("Tag"): Variable("Msg_Error")}) == Number(2)
+    assert TLV_MESSAGE.size(
+        {Field("Tag"): Variable("Msg_Data"), Field("Length"): Number(4)}
+    ) == Number(48)
+
+    assert (
+        ETHERNET_FRAME.size(
+            {
+                Field("Type_Length_TPID"): Number(46),
+                Field("Type_Length"): Number(46),
+                Field("Payload"): Aggregate(*[Number(0)] * 46),
+            }
+        )
+        == Number(480)
+    )
+    assert (
+        ETHERNET_FRAME.size(
+            {
+                Field("Type_Length_TPID"): Number(0x8100),
+                Field("TPID"): Number(0x8100),
+                Field("Type_Length"): Number(46),
+                Field("Payload"): Aggregate(*[Number(0)] * 46),
+            }
+        )
+        == Number(512)
+    )
+    assert (
+        ETHERNET_FRAME.size(
+            {
+                Field("Type_Length_TPID"): Number(1536),
+                Field("Type_Length"): Number(1536),
+                Field("Payload"): Aggregate(*[Number(0)] * 46),
+            }
+        )
+        == Number(480)
+    )
+
+
 def test_derived_message_incorrect_base_name() -> None:
     with pytest.raises(
         RecordFluxError,

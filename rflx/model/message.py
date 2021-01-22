@@ -7,6 +7,8 @@ from copy import copy
 from dataclasses import dataclass, field as dataclass_field
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple, Union
 
+import z3
+
 import rflx.typing_ as rty
 from rflx import expression as expr
 from rflx.common import Base, flat_name, indent, indent_next, verbose_repr
@@ -385,11 +387,6 @@ class AbstractMessage(mty.Type):
             if isinstance(r.left, expr.Variable) and isinstance(r.right, expr.Aggregate):
                 aggregate_constraints.extend(get_constraints(r.right, r.left))
 
-        message_constraints: List[expr.Expr] = [
-            expr.Equal(expr.Mod(expr.First("Message"), expr.Number(8)), expr.Number(1)),
-            expr.Equal(expr.Mod(expr.Size("Message"), expr.Number(8)), expr.Number(0)),
-        ]
-
         scalar_constraints = [
             c
             for n, t in scalar_types
@@ -403,10 +400,16 @@ class AbstractMessage(mty.Type):
         ]
 
         return [
-            *message_constraints,
             *aggregate_constraints,
             *scalar_constraints,
             *type_size_constraints,
+        ]
+
+    @classmethod
+    def message_constraints(cls) -> List[expr.Expr]:
+        return [
+            expr.Equal(expr.Mod(expr.First("Message"), expr.Number(8)), expr.Number(1)),
+            expr.Equal(expr.Mod(expr.Size("Message"), expr.Number(8)), expr.Number(0)),
         ]
 
     def __validate(self) -> None:
@@ -650,6 +653,44 @@ class Message(AbstractMessage):
                 return True
 
         return False
+
+    def size(self, field_values: Mapping[Field, expr.Expr]) -> expr.Expr:
+        for path in self.paths(FINAL):
+            opt = z3.Optimize()
+
+            opt.add(
+                expr.Equal(
+                    expr.Size("Message"),
+                    expr.Add(
+                        *[
+                            expr.Size(l.target.name)
+                            for l in path
+                            if l.target != FINAL and l.first == expr.UNDEFINED
+                        ]
+                    ).simplified(),
+                ).z3expr(),
+                *[
+                    expr.Equal(expr.Variable(f.name), v).z3expr()
+                    for f, v in field_values.items()
+                    if isinstance(v, (expr.Number, expr.Variable))
+                ],
+                *[
+                    expr.Equal(expr.Size(f.name), expr.Number(len(v.elements) * 8)).z3expr()
+                    for f, v in field_values.items()
+                    if isinstance(v, expr.Aggregate)
+                ],
+                *[fact.z3expr() for link in path for fact in self.__link_expression(link)],
+                *[e.z3expr() for e in self.type_constraints(expr.TRUE)],
+            )
+
+            size = opt.maximize(expr.Size("Message").z3expr())
+
+            if opt.check() == z3.sat:
+                value = size.value()
+                if isinstance(value, z3.IntNumRef):
+                    return expr.Number(value.as_long())
+
+        return expr.UNDEFINED
 
     def __verify_expression_types(self) -> None:
         types: Dict[ID, mty.Type] = {}
@@ -958,7 +999,7 @@ class Message(AbstractMessage):
                 for c in self.outgoing(f):
                     paths += 1
                     contradiction = c.condition
-                    constraints = self.type_constraints(contradiction)
+                    constraints = self.message_constraints() + self.type_constraints(contradiction)
                     proof = contradiction.check([*constraints, *facts])
                     if proof.result == expr.ProofResult.sat:
                         continue
@@ -1147,7 +1188,13 @@ class Message(AbstractMessage):
                             last.location,
                         )
                     )
-                    proof = start_aligned.check([*facts, *self.type_constraints(start_aligned)])
+                    proof = start_aligned.check(
+                        [
+                            *facts,
+                            *self.message_constraints(),
+                            *self.type_constraints(start_aligned),
+                        ]
+                    )
                     if proof.result != expr.ProofResult.unsat:
                         path_message = " -> ".join([p.target.name for p in path])
                         self.error.append(
@@ -1167,7 +1214,11 @@ class Message(AbstractMessage):
                         )
                     )
                     proof = is_multiple_of_element_size.check(
-                        [*facts, *self.type_constraints(is_multiple_of_element_size)]
+                        [
+                            *facts,
+                            *self.message_constraints(),
+                            *self.type_constraints(is_multiple_of_element_size),
+                        ]
                     )
                     if proof.result != expr.ProofResult.unsat:
                         path_message = " -> ".join([p.target.name for p in path])
@@ -1392,6 +1443,7 @@ class UnprovenMessage(AbstractMessage):
                         merged_condition = expr.And(link.condition, final_link.condition)
                         proof = merged_condition.check(
                             [
+                                *inner_message.message_constraints(),
                                 *inner_message.type_constraints(merged_condition),
                                 inner_message.field_condition(final_link.source),
                             ]
