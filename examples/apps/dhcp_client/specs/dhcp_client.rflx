@@ -80,6 +80,8 @@ package DHCP_Client is
          Channel'Write (Discover);
       transition
          then Receive_Offer
+      exception
+         then Failure
       end Send_Discover;
 
       state Receive_Offer is
@@ -91,6 +93,8 @@ package DHCP_Client is
          then Send_Request
             if Offer'Valid = True and Offer.Op = DHCP::BOOTREPLY and Offer_Message_Types'Size > 0 and Offer_Message_Types'Head = DHCP::DHCPOFFER
          then Receive_Offer
+      exception
+         then Failure
       end Receive_Offer;
 
       state Send_Request is
@@ -127,6 +131,8 @@ package DHCP_Client is
          Channel'Write (Request);
       transition
          then Receive_Ack
+      exception
+         then Failure
       end Send_Request;
 
       state Receive_Ack is
@@ -137,6 +143,8 @@ package DHCP_Client is
       transition
          then Success
             if Ack'Valid = True and Ack.Op = DHCP::BOOTREPLY and Ack_Message_Types'Size > 0 and Ack_Message_Types'Head = DHCP::DHCPACK
+         then Failure
+      exception
          then Failure
       end Receive_Ack;
 
