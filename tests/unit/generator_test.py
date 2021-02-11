@@ -266,6 +266,7 @@ end RFLX.P;
         },
     ),
     "session_states": TestCase(
+        # §S4.2, §S4.4
         Model(
             [],
             [
@@ -371,6 +372,7 @@ end RFLX.P.Generic_S;
         },
     ),
     "session_global_variable": TestCase(
+        # §S3.1.1, §S5.1.4, §5.2.1.3, §S4.5.1
         Model(
             [],
             [
@@ -498,6 +500,7 @@ end RFLX.P.Generic_S;
         },
     ),
     "session_state_variable": TestCase(
+        # §S4.3.1.1, §S5.1.3, §5.2.1.3
         Model(
             [],
             [
@@ -624,6 +627,7 @@ end RFLX.P.Generic_S;
         },
     ),
     "session_variable_initialization": TestCase(
+        # §S5.1.1, §S5.1.2, §S5.1.4, §S5.2.1.1, §S5.2.1.2, §5.2.1.3, §S5.2.1.4
         Model(
             [],
             [
@@ -759,6 +763,7 @@ end RFLX.P.Generic_S;
         },
     ),
     "session_global_variable_message": TestCase(
+        # §S3.1.2, §S5.1.3, §S5.8.3
         Model(
             models.TLV_MODEL.types,
             [
@@ -921,6 +926,7 @@ end RFLX.P.Generic_S;
         },
     ),
     "session_state_variable_message": TestCase(
+        # §S5.8.3, §S5.5.3, §S5.1.3, §S4.3.1.2
         Model(
             models.TLV_MODEL.types,
             [
@@ -1069,6 +1075,7 @@ end RFLX.P.Generic_S;
         },
     ),
     "session_message_sequence_append": TestCase(
+        # §S3.1.3, §S4.3.1.3, §S5.3.5, §S4.5.2
         Model(
             [*models.TLV_MODEL.types, models.TLV_MESSAGES],
             [
@@ -1283,6 +1290,7 @@ end RFLX.P.Generic_S;
         },
     ),
     "session_scalar_sequence_append": TestCase(
+        # §S3.1.3, §S4.3.1.3, §S5.1.5, §S4.5.2
         Model(
             [models.TLV_TAG, models.TLV_TAGS],
             [
@@ -1466,6 +1474,7 @@ end RFLX.P.Generic_S;
         },
     ),
     "session_comprehension": TestCase(
+        # §S3.1.3, §S4.3.1.3, §S5.9.2, §S5.9.3, §S5.9.5, §S5.9.10, §S4.5.1
         Model(
             [*models.TLV_MODEL.types, models.TLV_MESSAGES, models.TLV_TAGS],
             [
@@ -1673,6 +1682,7 @@ end RFLX.P.Generic_S;
         },
     ),
     "session_sequence_head": TestCase(
+        # FIXME
         Model(
             [*models.TLV_MODEL.types, models.TLV_MESSAGES, models.TLV_TAGS],
             [
