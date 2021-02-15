@@ -218,6 +218,233 @@ An array consists of a number of elements with similar type. Scalar types as wel
 type Options is array of Option;
 ```
 
+## Protocol Sessions
+
+The dynamic behavior of a protocol is defined using a finite state machine.
+
+### Parameters [§S2]
+
+#### Private type [§S2.1]
+
+#### Function [§S2.2]
+
+#### Channel [§S2.3]
+
+### Declarations [§S3]
+
+#### Variable Declaration [§S3.1]
+
+- Scalar [§S3.1.1]
+- Message [§S3.1.2]
+- Sequence [§S3.1.3]
+
+#### Renaming Declaration [§S3.2]
+
+### States [§S4]
+
+- Null state [§S4.2]
+
+#### State Declarations [§S4.3]
+
+##### Variable Declaration [§S4.3.1]
+
+  - Scalar [§S4.3.1.1]
+  - Message [§S4.3.1.2]
+  - Sequence [§S4.3.1.3]
+
+##### Renaming Declaration [§S4.3.2]
+
+#### State Transitions [§S4.4]
+
+#### State Actions [§S4.5]
+
+##### Assignment Statement [§S4.5.1]
+
+##### Append Attribute Statement [§S4.5.2]
+
+##### Extend Attribute Statement [§S4.5.3]
+
+##### Reset Attribute Statement [§S4.5.4]
+
+##### Read Attribute Statement [§S4.5.5]
+
+##### Write Attribute Statement [§S4.5.6]
+
+### Expressions [§S5]
+
+### Literals [§S5.1]
+
+Literals are allowed in:
+
+- Global declarations [§S5.1.1]
+- State declarations [§S5.1.2]
+- State transitions [§S5.1.3]
+- Assignment statements [§S5.1.4]
+- Append attributes [§S5.1.5]
+
+### Variables [§S5.2]
+
+Variables can be of type:
+
+- Scalar [§S5.2.1]
+- Message [§S5.2.2]
+- Scalar sequence [§S5.2.3]
+- Message sequence [§S5.2.4]
+
+Variables can occur in:
+
+- Global declarations [§S5.2.1.1, §S5.2.2.1, §S5.2.3.1, §S5.2.4.1]
+- State declarations [§S5.2.1.2, §S5.2.2.2, §S5.2.3.2, §S5.2.4.2]
+- State transitions [§5.2.1.3, §S5.2.2.3, §S5.2.3.3, §S5.2.4.3]
+- Assignment statements [§S5.2.1.4, §S5.2.2.4, §S5.2.3.4, §S5.2.4.4]
+
+Scalar and message variables can be used in:
+
+- Append attribute statements [§S5.2.1.5, §S5.2.2.5]
+
+Sequence variables can occur in:
+
+- Extend attribute statements [§S5.2.3.5, §S5.2.4.5]
+- Reset attribute statements [§S5.2.3.6, §S5.2.4.6]
+
+### Message aggregates [§S5.3]
+
+  - Global declarations [§S5.3.1]
+  - State declarations [§S5.3.2]
+  - State transitions [§S5.3.3]
+  - Assignment statements [§S5.3.4]
+  - Append attribute statements [§S5.3.5]
+
+### Aggregates [§S5.4]
+
+- Scalar [§S5.4.1]
+
+  - Global declarations [§S5.4.1.1]
+  - State declarations [§S5.4.1.2]
+  - State transitions [§S5.4.1.3]
+  - Assignment statements [§S5.4.1.4]
+  - Extend attribute statements [§S5.4.1.5]
+
+- Message [§S5.4.2]
+
+  - Global declarations [§S5.4.2.1]
+  - State declarations [§S5.4.2.2]
+  - State transitions [§S5.4.2.3]
+  - Assignment statements [§S5.4.2.4]
+  - Extend attribute statements [§S5.4.2.5]
+
+### Attributes
+
+#### Syntax
+
+*attribute_reference* ::= *prefix*__'__*attribute_designator*
+
+*attribute_designator* ::= __Valid__ | __Opaque__ | __Head__
+
+#### Static Semantics
+
+##### Valid Attribute [§S5.5]
+
+The Valid attribute allows to get the validity of a message. It can occur in:
+
+- Global declarations [§S5.5.1]
+- State declarations [§S5.5.2]
+- State transitions [§S5.5.3]
+- Assignment statements [§S5.5.4]
+
+##### Opaque Attribute [§S5.6]
+
+The Opaque attribute allows to get the byte representation of a message. It can occur in:
+
+- Global declarations [§S5.6.1]
+- State declarations [§S5.6.2]
+- State transitions [§S5.6.3]
+- Assignment statements [§S5.6.4]
+
+##### Head Attribute [§S5.7]
+
+The Head attribute allows to get the first element of a sequence. It can occur in:
+
+- Global declarations [§S5.7.1]
+- State declarations [§S5.7.2]
+- State transitions [§S5.7.3]
+- Assignment statements [§S5.7.4]
+- Append statements [§S5.7.5]
+- Call expressions [§S5.7.6]
+- Conversion expressions [§S5.7.7]
+- Message aggregate expressions [§S5.7.8]
+- Selected expressions [§S5.7.9]
+
+It is not allowed at:
+
+- List Comprehensions [§S5.7.10]
+
+The use of the Head attribute on an empty sequence leads to an exception transition. This behavior will change in the future (cf. [#569](https://github.com/Componolit/RecordFlux/issues/569)).
+
+#### Example
+
+```Ada
+    Message'Valid
+```
+
+```Ada
+    Message'Opaque
+```
+
+```Ada
+    Sequence'Head
+```
+
+### Selected [§S5.8]
+
+The Selected expression is used to access fields of a message.
+
+  - Global declarations [§S5.8.1]
+  - State declarations [§S5.8.2]
+  - State transitions [§S5.8.3]
+  - Assignment statements [§S5.8.4]
+
+### List Comprehensions [§S5.9]
+
+  - Source: Scalar sequence [§S5.9.1]
+  - Source: Message sequence [§S5.9.2]
+  - Target: Scalar sequence [§S5.9.3]
+  - Target: Message sequence [§S5.9.4]
+  - Condition: Message fields [§S5.9.5]
+  - Source sequence as target [§S5.9.6]
+  - Global declarations [§S5.9.7]
+  - State declarations [§S5.9.8]
+  - State transitions [§S5.9.9]
+  - Assignment statements [§S5.9.10]
+
+### Binding [§S5.10]
+
+  - Global declarations [§S5.10.1]
+  - State declarations [§S5.10.2]
+  - State transitions [§S5.10.3]
+  - Assignment statements [§S5.10.4]
+
+### Quantifiers [§S5.11]
+
+  - Global declarations [§S5.11.1]
+  - State declarations [§S5.11.2]
+  - State transitions [§S5.11.3]
+  - Assignment statements [§S5.11.4]
+
+### Call [§S5.12]
+
+  - Global declarations [§S5.12.1]
+  - State declarations [§S5.12.2]
+  - State transitions [§S5.12.3]
+  - Assignment statements [§S5.12.4]
+
+### Conversion [§S5.13]
+
+  - Global declarations [§S5.13.1]
+  - State declarations [§S5.13.2]
+  - State transitions [§S5.13.3]
+  - Assignment statements [§S5.13.4]
+
 ## Package
 
 A package is used to structure a specification.
